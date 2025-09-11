@@ -1,0 +1,490 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mobile-first responsive design with media queries */
+
+/* Base mobile styles */
+@media (max-width: 639px) {
+  /* Mobile phones */
+  .mobile-card {
+    @apply p-3 rounded-lg shadow-sm;
+  }
+  
+  .mobile-card-header {
+    @apply p-3 pb-2;
+  }
+  
+  .mobile-card-title {
+    @apply text-lg font-semibold;
+  }
+  
+  .mobile-card-content {
+    @apply p-3 pt-0;
+  }
+  
+  .mobile-text-sm {
+    @apply text-xs;
+  }
+  
+  .mobile-text-base {
+    @apply text-sm;
+  }
+  
+  .mobile-text-lg {
+    @apply text-base;
+  }
+  
+  .mobile-text-xl {
+    @apply text-lg;
+  }
+  
+  .mobile-text-2xl {
+    @apply text-xl;
+  }
+  
+  .mobile-button {
+    @apply px-3 py-2 text-sm h-9;
+  }
+  
+  .mobile-button-lg {
+    @apply px-4 py-3 text-base h-11;
+  }
+  
+  .mobile-button-xs {
+    @apply px-2 py-1 text-xs h-7;
+  }
+  
+  .mobile-input {
+    @apply px-3 py-2 text-sm h-9;
+  }
+  
+  .mobile-table {
+    @apply text-xs;
+  }
+  
+  .mobile-badge {
+    @apply text-xs px-2 py-1;
+  }
+  
+  .mobile-dialog {
+    @apply mx-2 my-4 max-w-[calc(100vw-1rem)];
+  }
+  
+  .mobile-spacing {
+    @apply space-y-3;
+  }
+  
+  .mobile-grid {
+    @apply grid-cols-1 gap-3;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* Tablets */
+  .tablet-card {
+    @apply p-4 rounded-lg;
+  }
+  
+  .tablet-card-header {
+    @apply p-4 pb-3;
+  }
+  
+  .tablet-card-title {
+    @apply text-xl font-semibold;
+  }
+  
+  .tablet-card-content {
+    @apply p-4 pt-0;
+  }
+  
+  .tablet-text-sm {
+    @apply text-sm;
+  }
+  
+  .tablet-text-base {
+    @apply text-base;
+  }
+  
+  .tablet-text-lg {
+    @apply text-lg;
+  }
+  
+  .tablet-text-xl {
+    @apply text-xl;
+  }
+  
+  .tablet-text-2xl {
+    @apply text-2xl;
+  }
+  
+  .tablet-button {
+    @apply px-4 py-2 text-base h-10;
+  }
+  
+  .tablet-button-lg {
+    @apply px-6 py-3 text-lg h-12;
+  }
+  
+  .tablet-button-xs {
+    @apply px-2 py-1 text-xs h-8;
+  }
+  
+  .tablet-input {
+    @apply px-4 py-2 text-base h-10;
+  }
+  
+  .tablet-table {
+    @apply text-sm;
+  }
+  
+  .tablet-badge {
+    @apply text-sm px-2 py-1;
+  }
+  
+  .tablet-dialog {
+    @apply mx-4 my-6 max-w-2xl;
+  }
+  
+  .tablet-spacing {
+    @apply space-y-4;
+  }
+  
+  .tablet-grid {
+    @apply grid-cols-2 gap-4;
+  }
+}
+
+/* Desktop styles (default) */
+@media (min-width: 1024px) {
+  .desktop-card {
+    @apply p-6 rounded-lg;
+  }
+  
+  .desktop-card-header {
+    @apply p-6 pb-4;
+  }
+  
+  .desktop-card-title {
+    @apply text-2xl font-bold;
+  }
+  
+  .desktop-card-content {
+    @apply p-6 pt-0;
+  }
+  
+  .desktop-text-sm {
+    @apply text-sm;
+  }
+  
+  .desktop-text-base {
+    @apply text-base;
+  }
+  
+  .desktop-text-lg {
+    @apply text-lg;
+  }
+  
+  .desktop-text-xl {
+    @apply text-xl;
+  }
+  
+  .desktop-text-2xl {
+    @apply text-2xl;
+  }
+  
+  .desktop-button {
+    @apply px-6 py-3 text-base h-12;
+  }
+  
+  .desktop-button-lg {
+    @apply px-8 py-4 text-lg h-14;
+  }
+  
+  .desktop-button-xs {
+    @apply px-2 py-1 text-xs h-8;
+  }
+  
+  .desktop-input {
+    @apply px-4 py-3 text-base h-12;
+  }
+  
+  .desktop-table {
+    @apply text-base;
+  }
+  
+  .desktop-badge {
+    @apply text-sm px-3 py-1;
+  }
+  
+  .desktop-dialog {
+    @apply max-w-4xl;
+  }
+  
+  .desktop-spacing {
+    @apply space-y-6;
+  }
+  
+  .desktop-grid {
+    @apply grid-cols-3 gap-6;
+  }
+}
+
+/* Enhanced responsive utilities */
+.responsive-card {
+  @apply mobile-card tablet-card desktop-card;
+}
+
+.responsive-card-header {
+  @apply mobile-card-header tablet-card-header desktop-card-header;
+}
+
+.responsive-card-title {
+  @apply mobile-card-title tablet-card-title desktop-card-title;
+}
+
+.responsive-card-content {
+  @apply mobile-card-content tablet-card-content desktop-card-content;
+}
+
+.responsive-text-sm {
+  @apply mobile-text-sm tablet-text-sm desktop-text-sm;
+}
+
+.responsive-text-base {
+  @apply mobile-text-base tablet-text-base desktop-text-base;
+}
+
+.responsive-text-lg {
+  @apply mobile-text-lg tablet-text-lg desktop-text-lg;
+}
+
+.responsive-text-xl {
+  @apply mobile-text-xl tablet-text-xl desktop-text-xl;
+}
+
+.responsive-text-2xl {
+  @apply mobile-text-2xl tablet-text-2xl desktop-text-2xl;
+}
+
+.responsive-button {
+  @apply mobile-button tablet-button desktop-button;
+}
+
+.responsive-button-lg {
+  @apply mobile-button-lg tablet-button-lg desktop-button-lg;
+}
+
+.responsive-button-xs {
+  @apply mobile-button-xs tablet-button-xs desktop-button-xs;
+}
+
+.responsive-input {
+  @apply mobile-input tablet-input desktop-input;
+}
+
+.responsive-table {
+  @apply mobile-table tablet-table desktop-table;
+}
+
+.responsive-badge {
+  @apply mobile-badge tablet-badge desktop-badge;
+}
+
+.responsive-dialog {
+  @apply mobile-dialog tablet-dialog desktop-dialog;
+}
+
+.responsive-spacing {
+  @apply mobile-spacing tablet-spacing desktop-spacing;
+}
+
+.responsive-grid {
+  @apply mobile-grid tablet-grid desktop-grid;
+}
+
+/* Navigation responsive styles */
+@media (max-width: 639px) {
+  .mobile-nav {
+    @apply h-14 px-3;
+  }
+  
+  .mobile-nav-logo {
+    @apply text-lg;
+  }
+  
+  .mobile-nav-button {
+    @apply px-2 py-1 text-xs h-8;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .tablet-nav {
+    @apply h-16 px-4;
+  }
+  
+  .tablet-nav-logo {
+    @apply text-xl;
+  }
+  
+  .tablet-nav-button {
+    @apply px-3 py-2 text-sm h-10;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-nav {
+    @apply h-20 px-6;
+  }
+  
+  .desktop-nav-logo {
+    @apply text-2xl;
+  }
+  
+  .desktop-nav-button {
+    @apply px-4 py-3 text-base h-12;
+  }
+}
+
+.responsive-nav {
+  @apply mobile-nav tablet-nav desktop-nav;
+}
+
+.responsive-nav-logo {
+  @apply mobile-nav-logo tablet-nav-logo desktop-nav-logo;
+}
+
+.responsive-nav-button {
+  @apply mobile-nav-button tablet-nav-button desktop-nav-button;
+}
+
+/* Enhanced mobile-specific improvements */
+@media (max-width: 639px) {
+  /* Mobile touch targets */
+  .mobile-touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Mobile form improvements */
+  .mobile-form {
+    @apply space-y-3;
+  }
+  
+  .mobile-form-group {
+    @apply space-y-1;
+  }
+  
+  .mobile-form-label {
+    @apply text-xs font-medium;
+  }
+  
+  /* Mobile table improvements */
+  .mobile-table-container {
+    @apply overflow-x-auto -mx-4 px-4;
+  }
+  
+  .mobile-table-row {
+    @apply border-b border-gray-100;
+  }
+  
+  .mobile-table-cell {
+    @apply py-2 px-2 align-top;
+  }
+  
+  /* Mobile dialog improvements */
+  .mobile-dialog-content {
+    @apply max-h-[85vh] overflow-y-auto;
+  }
+  
+  /* Mobile card improvements */
+  .mobile-card-compact {
+    @apply p-2;
+  }
+  
+  .mobile-card-compact-header {
+    @apply p-2 pb-1;
+  }
+  
+  .mobile-card-compact-content {
+    @apply p-2 pt-0;
+  }
+}
+
+/* Tablet-specific improvements */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* Tablet touch targets */
+  .tablet-touch-target {
+    @apply min-h-[48px] min-w-[48px];
+  }
+  
+  /* Tablet form improvements */
+  .tablet-form {
+    @apply space-y-4;
+  }
+  
+  .tablet-form-group {
+    @apply space-y-2;
+  }
+  
+  .tablet-form-label {
+    @apply text-sm font-medium;
+  }
+  
+  /* Tablet table improvements */
+  .tablet-table-container {
+    @apply overflow-x-auto -mx-6 px-6;
+  }
+  
+  .tablet-table-row {
+    @apply border-b border-gray-200;
+  }
+  
+  .tablet-table-cell {
+    @apply py-3 px-3;
+  }
+  
+  /* Tablet dialog improvements */
+  .tablet-dialog-content {
+    @apply max-h-[80vh] overflow-y-auto;
+  }
+}
+
+/* Desktop-specific improvements */
+@media (min-width: 1024px) {
+  /* Desktop touch targets */
+  .desktop-touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Desktop form improvements */
+  .desktop-form {
+    @apply space-y-6;
+  }
+  
+  .desktop-form-group {
+    @apply space-y-2;
+  }
+  
+  .desktop-form-label {
+    @apply text-sm font-medium;
+  }
+  
+  /* Desktop table improvements */
+  .desktop-table-container {
+    @apply overflow-x-auto;
+  }
+  
+  .desktop-table-row {
+    @apply border-b border-gray-200;
+  }
+  
+  .desktop-table-cell {
+    @apply py-4 px-4;
+  }
+  
+  /* Desktop dialog improvements */
+  .desktop-dialog-content {
+    @apply max-h-[75vh] overflow-y-auto;
+  }
+}
