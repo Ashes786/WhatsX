@@ -111,7 +111,7 @@ export function generateMessagePreview(templateContent: string, messageOverride?
     return messageOverride
   }
   
-  // For prototype, we'll just return the template content as-is
-  // In a real implementation, you might handle variable substitution here
+  // For the current implementation, we'll just return the template content as-is
+  // In a full implementation, you might handle variable substitution here
   return templateContent
 }

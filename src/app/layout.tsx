@@ -15,20 +15,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WhatsX - Messaging Automation Prototype",
+  title: "WhatsX - Messaging Automation Platform",
   description: "Create templates, manage users, and safely prepare bulk sends with smart duplicate handling.",
-  keywords: ["WhatsX", "Messaging", "Automation", "WhatsApp", "Prototype"],
+  keywords: ["WhatsX", "Messaging", "Automation", "WhatsApp"],
   authors: [{ name: "WhatsX Team" }],
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
   openGraph: {
-    title: "WhatsX - Messaging Automation Prototype",
+    title: "WhatsX - Messaging Automation Platform",
     description: "Create templates, manage users, and safely prepare bulk sends with smart duplicate handling.",
-    url: "https://chat.z.ai",
+    url: "https://whatsx.com",
     siteName: "WhatsX",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "WhatsX - Messaging Automation Prototype",
+    title: "WhatsX - Messaging Automation Platform",
     description: "Create templates, manage users, and safely prepare bulk sends with smart duplicate handling.",
   },
 };

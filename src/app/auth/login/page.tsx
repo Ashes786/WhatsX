@@ -91,7 +91,7 @@ export default function LoginPage() {
             </Button>
           </form>
           <div className="mt-4 text-center">
-            <Button variant="link" onClick={() => alert('Forgot password functionality not implemented in prototype')}>
+            <Button variant="link" onClick={() => alert('Forgot password functionality will be available soon')}>
               Forgot password?
             </Button>
             <p className="text-sm text-gray-600 mt-2">

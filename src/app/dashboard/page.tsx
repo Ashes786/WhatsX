@@ -144,91 +144,93 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 h-full overflow-y-auto">
+    <div className="p-8 space-y-8 h-full overflow-y-auto">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">
-            Welcome back, {session?.user.name}! Here's your platform overview.
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600">
+            Welcome back, {session?.user.name}! Here's your comprehensive platform overview.
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
           <Badge variant="outline" className="hidden sm:flex">
             {userRole === 'ADMIN' ? 'Administrator' : 'User'}
           </Badge>
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-sm text-gray-600">Live</span>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-600">Live</span>
+          </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-blue-500">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <Card className="border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Templates</CardTitle>
-            <FileText className="h-4 w-4 text-blue-500" />
+            <FileText className="h-5 w-5 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.templates}</div>
-            <p className="text-xs text-gray-500">
+            <div className="text-3xl font-bold text-blue-600">{stats.templates}</div>
+            <p className="text-xs text-gray-500 mt-1">
               {userRole === 'ADMIN' ? 'Manage templates' : 'Available templates'}
             </p>
-            <div className="mt-2">
-              <TrendingUp className="h-3 w-3 text-green-500 inline mr-1" />
+            <div className="mt-3 flex items-center">
+              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
               <span className="text-xs text-green-500">+2 this week</span>
             </div>
           </CardContent>
         </Card>
 
         {userRole === 'ADMIN' && (
-          <Card className="border-l-4 border-l-green-500">
+          <Card className="border-l-4 border-l-green-500 shadow-lg hover:shadow-xl transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">Active Users</CardTitle>
-              <Users className="h-4 w-4 text-green-500" />
+              <Users className="h-5 w-5 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.activeUsers}</div>
-              <p className="text-xs text-gray-500">
+              <div className="text-3xl font-bold text-green-600">{stats.activeUsers}</div>
+              <p className="text-xs text-gray-500 mt-1">
                 Total registered users
               </p>
-              <div className="mt-2">
-                <TrendingUp className="h-3 w-3 text-green-500 inline mr-1" />
+              <div className="mt-3 flex items-center">
+                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                 <span className="text-xs text-green-500">+3 this month</span>
               </div>
             </CardContent>
           </Card>
         )}
 
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="border-l-4 border-l-purple-500 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Contacts</CardTitle>
-            <Contact className="h-4 w-4 text-purple-500" />
+            <Contact className="h-5 w-5 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{stats.contacts}</div>
-            <p className="text-xs text-gray-500">
+            <div className="text-3xl font-bold text-purple-600">{stats.contacts}</div>
+            <p className="text-xs text-gray-500 mt-1">
               Your contact list
             </p>
-            <div className="mt-2">
-              <TrendingUp className="h-3 w-3 text-green-500 inline mr-1" />
+            <div className="mt-3 flex items-center">
+              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
               <span className="text-xs text-green-500">+15 this week</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500">
+        <Card className="border-l-4 border-l-orange-500 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Messages Prepared</CardTitle>
-            <Send className="h-4 w-4 text-orange-500" />
+            <Send className="h-5 w-5 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.recentJobs}</div>
-            <p className="text-xs text-gray-500">
+            <div className="text-3xl font-bold text-orange-600">{stats.recentJobs}</div>
+            <p className="text-xs text-gray-500 mt-1">
               Total prepared messages
             </p>
-            <div className="mt-2">
-              <TrendingUp className="h-3 w-3 text-green-500 inline mr-1" />
+            <div className="mt-3 flex items-center">
+              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
               <span className="text-xs text-green-500">+18 today</span>
             </div>
           </CardContent>
@@ -236,142 +238,155 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-blue-600" />
-              Quick Actions
-            </CardTitle>
-            <CardDescription>
-              Common tasks you can perform
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {userRole === 'ADMIN' && (
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-900">Admin Tasks</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => window.location.href = '/dashboard/users'}
-                    className="flex items-center gap-2"
-                  >
-                    <Users className="h-4 w-4" />
-                    Manage Users
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => window.location.href = '/dashboard/templates'}
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Create Template
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">User Tasks</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.location.href = '/dashboard/contacts'}
-                  className="flex items-center gap-2"
-                >
-                  <Contact className="h-4 w-4" />
-                  Add Contacts
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.location.href = '/dashboard/prepare'}
-                  className="flex items-center gap-2"
-                >
-                  <Send className="h-4 w-4" />
-                  Prepare Message
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
-              Recent Activity
-            </CardTitle>
-            <CardDescription>
-              Your recent actions on the platform
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivity.length > 0 ? (
-                recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className={`p-2 rounded-full bg-gray-100`}>
-                      <activity.icon className={`h-4 w-4 ${activity.color}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900">
-                          {activity.title}
-                        </p>
-                        <span className="text-xs text-gray-500">{activity.time}</span>
-                      </div>
-                      <p className="text-sm text-gray-600">{activity.description}</p>
-                      {getStatusBadge(activity.type)}
-                    </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <Clock className="h-6 w-6 mr-3 text-blue-600" />
+                Quick Actions
+              </CardTitle>
+              <CardDescription>
+                Common tasks you can perform to maximize your productivity
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {userRole === 'ADMIN' && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 text-lg">Admin Tasks</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      onClick={() => window.location.href = '/dashboard/users'}
+                      className="flex items-center gap-3 h-12"
+                    >
+                      <Users className="h-5 w-5" />
+                      Manage Users
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      onClick={() => window.location.href = '/dashboard/templates'}
+                      className="flex items-center gap-3 h-12"
+                    >
+                      <FileText className="h-5 w-5" />
+                      Create Template
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      onClick={() => window.location.href = '/dashboard/prepare'}
+                      className="flex items-center gap-3 h-12"
+                    >
+                      <Send className="h-5 w-5" />
+                      Prepare Messages
+                    </Button>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <CheckCircle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No recent activity</p>
-                  <p className="text-sm text-gray-400">Start using the platform to see your activity here</p>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
+              
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900 text-lg">User Tasks</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    onClick={() => window.location.href = '/dashboard/contacts'}
+                    className="flex items-center gap-3 h-12"
+                  >
+                    <Contact className="h-5 w-5" />
+                    Manage Contacts
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    onClick={() => window.location.href = '/messages'}
+                    className="flex items-center gap-3 h-12"
+                  >
+                    <Send className="h-5 w-5" />
+                    Create Messages
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div>
+          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <TrendingUp className="h-6 w-6 mr-3 text-green-600" />
+                Recent Activity
+              </CardTitle>
+              <CardDescription>
+                Your recent actions on the platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className={`p-2 rounded-full bg-white shadow-sm`}>
+                        <activity.icon className={`h-4 w-4 ${activity.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {activity.title}
+                          </p>
+                          <span className="text-xs text-gray-500">{activity.time}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">{activity.description}</p>
+                        {getStatusBadge(activity.type)}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No recent activity</p>
+                    <p className="text-sm text-gray-400">Start using the platform to see your activity here</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* System Status */}
-      <Card>
+      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+          <CardTitle className="flex items-center text-xl">
+            <CheckCircle className="h-6 w-6 mr-3 text-green-600" />
             System Status
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium text-green-800">API Service</span>
               </div>
-              <span className="text-sm text-green-600">Operational</span>
+              <span className="text-sm font-medium text-green-600">Operational</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium text-green-800">Database</span>
               </div>
-              <span className="text-sm text-green-600">Connected</span>
+              <span className="text-sm font-medium text-green-600">Connected</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium text-green-800">WhatsApp API</span>
               </div>
-              <span className="text-sm text-green-600">Ready</span>
+              <span className="text-sm font-medium text-green-600">Ready</span>
             </div>
           </div>
         </CardContent>

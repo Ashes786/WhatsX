@@ -11,9 +11,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const messages = await db.message.findMany({
+    // Get user's prepare-to-send jobs instead of messages
+    const jobs = await db.prepareToSendJob.findMany({
       where: {
-        userId: session.user?.id,
+        user_id: session.user?.id,
       },
       include: {
         template: true,
@@ -24,9 +25,25 @@ export async function GET() {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        created_at: 'desc',
       },
     })
+
+    // Transform jobs to match expected message format
+    const messages = jobs.map(job => ({
+      id: job.id,
+      content: job.message_preview,
+      status: 'DRAFT', // You can enhance this based on actual job status
+      createdAt: job.created_at.toISOString(),
+      recipients: job.recipients_final.map((phone, index) => ({
+        contact: {
+          id: `contact-${index}`, // This is a placeholder, you'd need proper contact IDs
+          name: phone,
+          phoneNumber: phone,
+        },
+        status: 'PENDING',
+      })),
+    }))
 
     return NextResponse.json(messages)
   } catch (error) {
@@ -58,7 +75,7 @@ export async function POST(request: NextRequest) {
         id: {
           in: uniqueContactIds,
         },
-        userId: session.user?.id,
+        owner_id: session.user?.id,
       },
     })
 
@@ -66,31 +83,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Some contacts not found or access denied' }, { status: 404 })
     }
 
-    // Create message with recipients
-    const message = await db.message.create({
+    // Prepare recipient data for the job
+    const recipientsRaw = contacts.map(c => c.raw_phone)
+    const recipientsFinal = contacts.map(c => c.e164_phone || c.raw_phone)
+    
+    // Create prepare-to-send job instead of a message
+    const job = await db.prepareToSendJob.create({
       data: {
-        content,
-        userId: session.user?.id,
-        templateId: templateId || null,
-        status: 'DRAFT',
-        recipients: {
-          create: contacts.map(contact => ({
-            contactId: contact.id,
-            status: 'PENDING',
-          })),
-        },
-      },
-      include: {
-        template: true,
-        recipients: {
-          include: {
-            contact: true,
-          },
-        },
+        user_id: session.user?.id,
+        template_id: templateId || null,
+        message_preview: content,
+        recipients_raw: JSON.stringify(recipientsRaw),
+        recipients_final: JSON.stringify(recipientsFinal),
+        duplicates: JSON.stringify([]), // No duplicates for now
       },
     })
 
-    return NextResponse.json(message)
+    return NextResponse.json({
+      id: job.id,
+      content: job.message_preview,
+      status: 'DRAFT',
+      createdAt: job.created_at.toISOString(),
+      recipients: recipientsFinal.map((phone, index) => ({
+        contact: {
+          id: contacts[index].id,
+          name: contacts[index].name || phone,
+          phoneNumber: phone,
+        },
+        status: 'PENDING',
+      })),
+    })
   } catch (error) {
     console.error('Error creating message:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

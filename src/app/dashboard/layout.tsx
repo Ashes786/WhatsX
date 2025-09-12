@@ -2,16 +2,18 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarProvider } from '@/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { 
   LayoutDashboard, 
   Users, 
   FileText, 
   Contact, 
   Send, 
-  LogOut
+  LogOut,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 
 interface DashboardLayoutProps {
@@ -50,6 +52,7 @@ const menuItems = [
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -76,11 +79,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <div className="flex h-screen bg-gray-50">
-        <Sidebar className="w-64">
+        <Sidebar collapsible="icon" className="transition-all duration-300">
           <SidebarHeader className="p-4">
-            <div className="flex items-center space-x-2">
-              <FileText className="h-6 w-6 text-blue-600" />
-              <span className="text-lg font-semibold">WhatsX</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-6 w-6 text-blue-600" />
+                {!isCollapsed && <span className="text-lg font-semibold">WhatsX</span>}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+              >
+                {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -93,7 +105,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <SidebarMenuButton asChild>
                         <a href={item.url} className="flex items-center space-x-2">
                           <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          {!isCollapsed && <span>{item.title}</span>}
                         </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -105,10 +117,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <SidebarFooter className="p-4">
             <div className="space-y-2">
               <div className="text-sm text-gray-600">
-                Logged in as: {session.user.name}
+                {!isCollapsed && `Logged in as: ${session.user.name}`}
               </div>
               <div className="text-xs text-gray-500">
-                Role: {userRole}
+                {!isCollapsed && `Role: ${userRole}`}
               </div>
               <Button 
                 variant="outline" 
@@ -117,17 +129,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 className="w-full"
               >
                 <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                {!isCollapsed && 'Logout'}
               </Button>
             </div>
           </SidebarFooter>
         </Sidebar>
         
-        <main className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto">
-            {children}
-          </div>
-        </main>
+        <SidebarInset>
+          <main className="flex-1 overflow-hidden">
+            <div className="h-full overflow-y-auto">
+              {children}
+            </div>
+          </main>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   )

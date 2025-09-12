@@ -96,7 +96,7 @@ export default function HomePage() {
           <div className="mb-8">
             <Badge className="mb-4 inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 border-blue-200">
               <Award className="h-4 w-4" />
-              Award-Winning Platform
+              Enterprise-Grade Platform
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
               Transform Your 
@@ -105,7 +105,7 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              The enterprise-grade messaging automation platform that empowers teams to deliver personalized, 
+              The professional messaging automation platform that empowers teams to deliver personalized, 
               targeted messages at scale while eliminating duplicates and ensuring compliance.
             </p>
           </div>
