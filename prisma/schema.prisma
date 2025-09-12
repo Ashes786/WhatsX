@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,71 +8,63 @@ datasource db {
 }
 
 model User {
-  id                  String   @id @default(uuid())
-  name                String
-  email               String   @unique
-  password_hash       String
-  role                UserRole @default(END_USER)
-  status              UserStatus @default(ACTIVE)
-  default_country_code String?  // e.g. "+92"
-  created_at          DateTime @default(now())
-  updated_at          DateTime @updatedAt
-
-  // Relations
-  contacts            Contact[]
-  created_templates   Template[]
+  id                   String             @id @default(uuid())
+  name                 String
+  email                String             @unique
+  password_hash        String
+  role                 UserRole           @default(END_USER)
+  status               UserStatus         @default(ACTIVE)
+  default_country_code String?
+  created_at           DateTime           @default(now())
+  updated_at           DateTime           @updatedAt
+  contacts             Contact[]
   prepare_to_send_jobs PrepareToSendJob[]
+  created_templates    Template[]
 
   @@map("users")
 }
 
 model Template {
-  id          String      @id @default(uuid())
-  title       String
-  content     String
-  created_by  String      // FK to User.id
-  is_active   Boolean     @default(true)
-  created_at  DateTime    @default(now())
-  updated_at  DateTime    @updatedAt
-
-  // Relations
-  creator     User        @relation(fields: [created_by], references: [id])
+  id                   String             @id @default(uuid())
+  title                String
+  content              String
+  created_by           String
+  is_active            Boolean            @default(true)
+  created_at           DateTime           @default(now())
+  updated_at           DateTime           @updatedAt
   prepare_to_send_jobs PrepareToSendJob[]
+  creator              User               @relation(fields: [created_by], references: [id])
 
   @@unique([title, created_by])
   @@map("templates")
 }
 
 model Contact {
-  id          String   @id @default(uuid())
-  owner_id    String   // FK to User.id
-  name        String?
-  raw_phone   String
-  e164_phone  String?  // normalized canonical number
-  label       String?
-  added_at    DateTime @default(now())
-  updated_at  DateTime @updatedAt
-
-  // Relations
-  owner       User     @relation(fields: [owner_id], references: [id])
+  id         String   @id @default(uuid())
+  owner_id   String
+  name       String?
+  raw_phone  String
+  e164_phone String?
+  label      String?
+  added_at   DateTime @default(now())
+  updated_at DateTime @updatedAt
+  owner      User     @relation(fields: [owner_id], references: [id])
 
   @@unique([owner_id, e164_phone])
   @@map("contacts")
 }
 
 model PrepareToSendJob {
-  id               String   @id @default(uuid())
-  user_id          String   // FK to User.id
-  template_id      String?  // FK to Template.id
+  id               String    @id @default(uuid())
+  user_id          String
+  template_id      String?
   message_preview  String
-  recipients_raw   String   // JSON array of raw phone strings
-  recipients_final String   // JSON array of normalized E.164 phone strings
-  duplicates       String   // JSON array of duplicate objects
-  created_at       DateTime @default(now())
-
-  // Relations
-  user             User     @relation(fields: [user_id], references: [id])
+  recipients_raw   String
+  recipients_final String
+  duplicates       String
+  created_at       DateTime  @default(now())
   template         Template? @relation(fields: [template_id], references: [id])
+  user             User      @relation(fields: [user_id], references: [id])
 
   @@map("prepare_to_send_jobs")
 }

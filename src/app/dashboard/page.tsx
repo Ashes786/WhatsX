@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { 
   FileText, 
   Users, 
-  Contact, 
   Send, 
   TrendingUp,
   Clock,
@@ -20,13 +19,6 @@ interface Template {
   id: string
   title: string
   is_active: boolean
-}
-
-interface Contact {
-  id: string
-  name?: string
-  raw_phone: string
-  label?: string
 }
 
 interface PrepareJob {
@@ -46,6 +38,12 @@ interface Activity {
   color: string
 }
 
+interface TrendData {
+  templatesThisWeek: number
+  usersThisMonth: number
+  messagesToday: number
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession()
   const userRole = session?.user.role
@@ -55,6 +53,12 @@ export default function DashboardPage() {
     contacts: 0,
     recentJobs: 0,
     activeUsers: 0
+  })
+  
+  const [trendData, setTrendData] = useState<TrendData>({
+    templatesThisWeek: 0,
+    usersThisMonth: 0,
+    messagesToday: 0
   })
   
   const [recentActivity, setRecentActivity] = useState<Activity[]>([])
@@ -73,13 +77,6 @@ export default function DashboardPage() {
         setStats(prev => ({ ...prev, templates: templates.length }))
       }
 
-      // Fetch contacts
-      const contactsResponse = await fetch('/api/contacts')
-      if (contactsResponse.ok) {
-        const contacts = await contactsResponse.json()
-        setStats(prev => ({ ...prev, contacts: contacts.length }))
-      }
-
       // Fetch recent prepare jobs from API
       const prepareResponse = await fetch('/api/prepare-to-send')
       if (prepareResponse.ok) {
@@ -91,7 +88,7 @@ export default function DashboardPage() {
           id: job.id,
           type: 'message_prepared',
           title: `Message prepared for ${job.recipients_final.length} recipients`,
-          description: job.message_preview.substring(0, 50) + '...',
+          description: job.message_preview.substring(0, 50) + (job.message_preview.length > 50 ? '...' : ''),
           time: index === 0 ? 'Just now' : index === 1 ? '1 hour ago' : '2 hours ago',
           icon: Send,
           color: 'text-purple-600'
@@ -109,6 +106,26 @@ export default function DashboardPage() {
         }
       }
 
+      // Fetch user's contacts count
+      const contactsResponse = await fetch('/api/contacts')
+      if (contactsResponse.ok) {
+        const contacts = await contactsResponse.json()
+        setStats(prev => ({ ...prev, contacts: contacts.length }))
+      }
+
+      // Fetch trend data (mock for now, in real app this would be actual queries)
+      const now = new Date()
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+      // Mock trend data - in real app, these would be actual database queries
+      setTrendData({
+        templatesThisWeek: Math.floor(Math.random() * 5) + 1,
+        usersThisMonth: Math.floor(Math.random() * 10) + 1,
+        messagesToday: Math.floor(Math.random() * 20) + 1
+      })
+
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
     } finally {
@@ -118,9 +135,6 @@ export default function DashboardPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'template_created':
-      case 'contacts_imported':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Success</Badge>
       case 'message_prepared':
         return <Badge variant="default" className="bg-blue-100 text-blue-800">Prepared</Badge>
       default:
@@ -178,7 +192,7 @@ export default function DashboardPage() {
             </p>
             <div className="mt-3 flex items-center">
               <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-xs text-green-500">+2 this week</span>
+              <span className="text-xs text-green-500">+{trendData.templatesThisWeek} this week</span>
             </div>
           </CardContent>
         </Card>
@@ -196,7 +210,7 @@ export default function DashboardPage() {
               </p>
               <div className="mt-3 flex items-center">
                 <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-xs text-green-500">+3 this month</span>
+                <span className="text-xs text-green-500">+{trendData.usersThisMonth} this month</span>
               </div>
             </CardContent>
           </Card>
@@ -205,7 +219,7 @@ export default function DashboardPage() {
         <Card className="border-l-4 border-l-purple-500 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Contacts</CardTitle>
-            <Contact className="h-5 w-5 text-purple-500" />
+            <Users className="h-5 w-5 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-purple-600">{stats.contacts}</div>
@@ -231,7 +245,7 @@ export default function DashboardPage() {
             </p>
             <div className="mt-3 flex items-center">
               <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-xs text-green-500">+18 today</span>
+              <span className="text-xs text-green-500">+{trendData.messagesToday} today</span>
             </div>
           </CardContent>
         </Card>
@@ -273,15 +287,6 @@ export default function DashboardPage() {
                       <FileText className="h-5 w-5" />
                       Create Template
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="lg" 
-                      onClick={() => window.location.href = '/dashboard/prepare'}
-                      className="flex items-center gap-3 h-12"
-                    >
-                      <Send className="h-5 w-5" />
-                      Prepare Messages
-                    </Button>
                   </div>
                 </div>
               )}
@@ -289,15 +294,6 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <h4 className="font-medium text-gray-900 text-lg">User Tasks</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    onClick={() => window.location.href = '/dashboard/contacts'}
-                    className="flex items-center gap-3 h-12"
-                  >
-                    <Contact className="h-5 w-5" />
-                    Manage Contacts
-                  </Button>
                   <Button 
                     variant="outline" 
                     size="lg" 
