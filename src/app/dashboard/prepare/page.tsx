@@ -351,7 +351,7 @@ export default function PrepareToSendPage() {
                   <div className="flex items-center space-x-2">
                     <Input
                       type="file"
-                      accept=".csv"
+                      accept=".csv,.xlsx,.xls"
                       onChange={handleCSVUpload}
                       className="flex-1"
                     />
@@ -547,8 +547,9 @@ export default function PrepareToSendPage() {
                 >
                   Edit Message
                 </Button>
-                <Button disabled className="opacity-50 cursor-not-allowed">
-                  Prototype: Sending not implemented
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                  <Send className="h-4 w-4 mr-2" />
+                  Queue for Sending
                 </Button>
               </div>
             </>

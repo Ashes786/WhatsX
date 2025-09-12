@@ -44,10 +44,13 @@ export default function TemplatesPage() {
 
   const fetchTemplates = async () => {
     try {
+      setLoading(true)
       const response = await fetch('/api/templates')
       if (response.ok) {
         const data = await response.json()
         setTemplates(data)
+      } else {
+        console.error('Failed to fetch templates')
       }
     } catch (error) {
       console.error('Failed to fetch templates:', error)
@@ -209,7 +212,26 @@ export default function TemplatesPage() {
         <CardContent>
           {loading ? (
             <div className="flex justify-center items-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <div className="flex flex-col items-center space-y-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <p className="text-sm text-gray-600">Loading templates...</p>
+              </div>
+            </div>
+          ) : templates.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 mb-2">No templates found</p>
+              {isAdmin && (
+                <p className="text-sm text-gray-400 mb-4">
+                  Create your first template to get started with messaging automation
+                </p>
+              )}
+              {isAdmin && (
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Template
+                </Button>
+              )}
             </div>
           ) : (
             <Table>

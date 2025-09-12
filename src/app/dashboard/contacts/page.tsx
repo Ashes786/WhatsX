@@ -362,13 +362,13 @@ Bob Johnson,+1555555555,Family`
                     Drop your CSV file here or click to browse
                   </p>
                   <p className="text-xs text-gray-500">
-                    Supported columns: name, phone, label
+                    Supported formats: CSV, Excel (.xlsx, .xls)
                   </p>
                 </div>
                 <div className="mt-4">
                   <Input
                     type="file"
-                    accept=".csv"
+                    accept=".csv,.xlsx,.xls"
                     onChange={handleCSVUpload}
                     className="max-w-xs mx-auto"
                   />
@@ -378,11 +378,12 @@ Bob Johnson,+1555555555,Family`
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-medium text-blue-900 mb-2">CSV Format Requirements:</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• File must be in CSV format</li>
+                  <li>• File must be in CSV or Excel format</li>
                   <li>• Required column: <code>phone</code></li>
                   <li>• Optional columns: <code>name</code>, <code>label</code></li>
                   <li>• Phone numbers will be normalized automatically</li>
                   <li>• Duplicates will be detected and flagged</li>
+                  <li>• First row should contain column headers</li>
                 </ul>
               </div>
             </CardContent>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { normalizePhoneNumber } from '@/lib/phone-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -135,34 +136,4 @@ function parseCSVLine(line: string): string[] {
   
   result.push(current)
   return result
-}
-
-function normalizePhoneNumber(rawPhone: string, defaultCountryCode?: string): string | null {
-  // Strip all non-digit and non-plus characters
-  let s = rawPhone.replace(/[^\d+]/g, '')
-  
-  if (!s) return null
-  
-  // If it begins with "00", replace leading "00" with "+"
-  if (s.startsWith('00')) {
-    s = '+' + s.substring(2)
-  }
-  
-  // If it begins with "+", keep it
-  if (s.startsWith('+')) {
-    return s
-  }
-  
-  // If it begins with a single "0" and default country code exists
-  if (s.startsWith('0') && defaultCountryCode) {
-    return defaultCountryCode + s.substring(1)
-  }
-  
-  // If it's a plain local number and default country code exists
-  if (defaultCountryCode && s.length <= 10) {
-    return defaultCountryCode + s
-  }
-  
-  // Return as-is (best effort)
-  return s
 }

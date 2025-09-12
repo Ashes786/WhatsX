@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the REST API endpoints for the WhatsX messaging automation prototype. All endpoints require authentication and follow RESTful conventions.
+This document describes the REST API endpoints for the WhatsX messaging automation platform. All endpoints require authentication and follow RESTful conventions.
 
 ## Base URL
 ```

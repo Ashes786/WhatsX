@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the database schema for the WhatsX messaging automation prototype. The schema is implemented using SQLite with Prisma ORM.
+This document describes the database schema for the WhatsX messaging automation platform. The schema is implemented using SQLite with Prisma ORM.
 
 ## Entity Relationship Diagram
 
