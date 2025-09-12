@@ -86,9 +86,14 @@ export default function UsersPage() {
           status: 'ACTIVE',
           default_country_code: ''
         })
+      } else {
+        const errorData = await response.json()
+        console.error('Error response:', errorData)
+        alert(errorData.error || 'Failed to save user')
       }
     } catch (error) {
       console.error('Failed to save user:', error)
+      alert('An error occurred while saving the user')
     }
   }
 

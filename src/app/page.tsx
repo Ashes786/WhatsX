@@ -82,7 +82,7 @@ export default function HomePage() {
               <Button variant="ghost" onClick={() => router.push('/auth/login')} className="hidden sm:flex">
                 Login
               </Button>
-              <Button onClick={() => router.push('/auth/login')} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Button onClick={() => router.push('/auth/signup')} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                 Get Started
               </Button>
             </div>
@@ -111,7 +111,7 @@ export default function HomePage() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button size="lg" onClick={() => router.push('/auth/login')} className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg">
+            <Button size="lg" onClick={() => router.push('/auth/signup')} className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg">
               Start Free Trial
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
