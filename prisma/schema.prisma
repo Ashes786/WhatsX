@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,102 +11,81 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      Role     @default(END_USER)
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  name                String
+  email               String   @unique
+  password_hash       String
+  role                UserRole @default(END_USER)
+  status              UserStatus @default(ACTIVE)
+  default_country_code String?  // e.g. "+92"
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
 
   // Relations
-  templates Template[]
-  contacts  Contact[]
-  messages  Message[]
+  contacts            Contact[]
+  created_templates   Template[]
+  prepare_to_send_jobs PrepareToSendJob[]
 
   @@map("users")
 }
 
 model Template {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String      @id @default(uuid())
+  title       String
+  content     String
+  created_by  String      // FK to User.id
+  is_active   Boolean     @default(true)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
 
   // Relations
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages  Message[]
+  creator     User        @relation(fields: [created_by], references: [id])
+  prepare_to_send_jobs PrepareToSendJob[]
 
+  @@unique([title, created_by])
   @@map("templates")
 }
 
 model Contact {
-  id          String   @id @default(cuid())
-  name        String
-  phoneNumber String
+  id          String   @id @default(uuid())
+  owner_id    String   // FK to User.id
+  name        String?
+  raw_phone   String
+  e164_phone  String?  // normalized canonical number
   label       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  added_at    DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   // Relations
-  userId     String
-  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recipients MessageRecipient[]
+  owner       User     @relation(fields: [owner_id], references: [id])
 
-  @@unique([userId, phoneNumber])
+  @@unique([owner_id, e164_phone])
   @@map("contacts")
 }
 
-model Message {
-  id        String           @id @default(cuid())
-  content   String
-  status    MessageStatus    @default(DRAFT)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+model PrepareToSendJob {
+  id               String   @id @default(uuid())
+  user_id          String   // FK to User.id
+  template_id      String?  // FK to Template.id
+  message_preview  String
+  recipients_raw   String   // JSON array of raw phone strings
+  recipients_final String   // JSON array of normalized E.164 phone strings
+  duplicates       String   // JSON array of duplicate objects
+  created_at       DateTime @default(now())
 
   // Relations
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  templateId String?
-  template  Template?        @relation(fields: [templateId], references: [id])
-  recipients MessageRecipient[]
+  user             User     @relation(fields: [user_id], references: [id])
+  template         Template? @relation(fields: [template_id], references: [id])
 
-  @@map("messages")
+  @@map("prepare_to_send_jobs")
 }
 
-model MessageRecipient {
-  id         String           @id @default(cuid())
-  status     RecipientStatus  @default(PENDING)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-
-  // Relations
-  messageId  String
-  message    Message          @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  contactId  String
-  contact    Contact          @relation(fields: [contactId], references: [id], onDelete: Cascade)
-
-  @@unique([messageId, contactId])
-  @@map("message_recipients")
-}
-
-enum Role {
+enum UserRole {
   ADMIN
   END_USER
 }
 
-enum MessageStatus {
-  DRAFT
-  SCHEDULED
-  SENT
-  FAILED
-}
-
-enum RecipientStatus {
-  PENDING
-  SENT
-  DELIVERED
-  FAILED
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
 }

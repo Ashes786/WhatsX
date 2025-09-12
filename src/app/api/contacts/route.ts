@@ -1,29 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { createContactSchema, validatePhoneNumber, handleApiError, createSuccessResponse, AppError } from '@/lib/validation'
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      throw new AppError('Unauthorized', 401)
     }
 
     const contacts = await db.contact.findMany({
       where: {
-        userId: session.user?.id,
+        owner_id: session.user.id
       },
       orderBy: {
-        createdAt: 'desc',
-      },
+        added_at: 'desc'
+      }
     })
 
-    return NextResponse.json(contacts)
+    return createSuccessResponse(contacts)
   } catch (error) {
-    console.error('Error fetching contacts:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return handleApiError(error)
   }
 }
 
@@ -32,62 +32,79 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      throw new AppError('Unauthorized', 401)
     }
 
-    const { contacts: contactList } = await request.json()
+    const body = await request.json()
+    
+    // Validate input
+    const validatedData = createContactSchema.parse(body)
+    const { name, raw_phone, label } = validatedData
 
-    if (!contactList || !Array.isArray(contactList)) {
-      return NextResponse.json({ error: 'Invalid contacts data' }, { status: 400 })
+    // Validate phone number
+    const phoneValidation = validatePhoneNumber(raw_phone)
+    if (!phoneValidation.valid) {
+      throw new AppError(phoneValidation.error || 'Invalid phone number', 400)
     }
 
-    const results = {
-      added: [],
-      duplicates: [],
-      errors: []
-    }
+    // Normalize phone number
+    const e164_phone = normalizePhoneNumber(raw_phone, session.user.default_country_code)
 
-    for (const contactData of contactList) {
-      try {
-        const { name, phoneNumber, label } = contactData
-
-        if (!name || !phoneNumber) {
-          results.errors.push({ contact: contactData, error: 'Name and phone number are required' })
-          continue
-        }
-
-        // Check for duplicate contact for this user
-        const existingContact = await db.contact.findFirst({
-          where: {
-            userId: session.user?.id,
-            phoneNumber: phoneNumber.trim(),
-          },
-        })
-
-        if (existingContact) {
-          results.duplicates.push({ contact: contactData, existing: existingContact })
-          continue
-        }
-
-        // Create new contact
-        const newContact = await db.contact.create({
-          data: {
-            name: name.trim(),
-            phoneNumber: phoneNumber.trim(),
-            label: label?.trim() || null,
-            userId: session.user?.id,
-          },
-        })
-
-        results.added.push(newContact)
-      } catch (error) {
-        results.errors.push({ contact: contactData, error: 'Failed to create contact' })
+    // Check if contact with same normalized phone already exists
+    const existingContact = await db.contact.findFirst({
+      where: {
+        owner_id: session.user.id,
+        e164_phone: e164_phone
       }
+    })
+
+    if (existingContact) {
+      throw new AppError('Contact with this phone number already exists', 400)
     }
 
-    return NextResponse.json(results)
+    // Create contact
+    const contact = await db.contact.create({
+      data: {
+        owner_id: session.user.id,
+        name: name || null,
+        raw_phone,
+        e164_phone,
+        label: label || null
+      }
+    })
+
+    return createSuccessResponse(contact, 201)
   } catch (error) {
-    console.error('Error creating contacts:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return handleApiError(error)
   }
+}
+
+function normalizePhoneNumber(rawPhone: string, defaultCountryCode?: string): string | null {
+  // Strip all non-digit and non-plus characters
+  let s = rawPhone.replace(/[^\d+]/g, '')
+  
+  if (!s) return null
+  
+  // If it begins with "00", replace leading "00" with "+"
+  if (s.startsWith('00')) {
+    s = '+' + s.substring(2)
+  }
+  
+  // If it begins with "+", keep it
+  if (s.startsWith('+')) {
+    return s
+  }
+  
+  // If it begins with a single "0" and default country code exists
+  if (s.startsWith('0') && defaultCountryCode) {
+    return defaultCountryCode + s.substring(1)
+  }
+  
+  // If it's a plain local number and default country code exists
+  if (defaultCountryCode && s.length <= 10) {
+    return defaultCountryCode + s
+  }
+  
+  // Return as-is (best effort)
+  return s
 }

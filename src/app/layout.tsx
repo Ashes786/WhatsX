@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import Providers from "@/components/providers";
+import { SessionProviderWrapper } from "@/components/session-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,14 +15,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WhatsX - Advanced WhatsApp Messaging & Automation",
-  description: "Professional WhatsApp messaging automation platform for businesses and organizations",
-  keywords: ["WhatsApp", "messaging", "automation", "bulk messaging", "templates"],
+  title: "WhatsX - Messaging Automation Prototype",
+  description: "Create templates, manage users, and safely prepare bulk sends with smart duplicate handling.",
+  keywords: ["WhatsX", "Messaging", "Automation", "WhatsApp", "Prototype"],
   authors: [{ name: "WhatsX Team" }],
   openGraph: {
-    title: "WhatsX - Advanced WhatsApp Messaging & Automation",
-    description: "Professional WhatsApp messaging automation platform",
+    title: "WhatsX - Messaging Automation Prototype",
+    description: "Create templates, manage users, and safely prepare bulk sends with smart duplicate handling.",
+    url: "https://chat.z.ai",
+    siteName: "WhatsX",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WhatsX - Messaging Automation Prototype",
+    description: "Create templates, manage users, and safely prepare bulk sends with smart duplicate handling.",
   },
 };
 
@@ -36,10 +43,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <Providers>
+        <SessionProviderWrapper>
           {children}
           <Toaster />
-        </Providers>
+        </SessionProviderWrapper>
       </body>
     </html>
   );

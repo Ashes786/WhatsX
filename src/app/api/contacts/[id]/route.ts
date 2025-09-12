@@ -1,7 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const contact = await db.contact.findFirst({
+      where: {
+        id: params.id,
+        owner_id: session.user.id
+      }
+    })
+
+    if (!contact) {
+      return NextResponse.json({ error: 'Contact not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(contact)
+  } catch (error) {
+    console.error('Error fetching contact:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
 
 export async function PUT(
   request: NextRequest,
@@ -14,43 +43,51 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { name, phoneNumber, label } = await request.json()
-    const { id } = params
+    const body = await request.json()
+    const { name, raw_phone, label } = body
 
-    // Check if contact exists and belongs to current user
+    // Check if contact exists and belongs to user
     const existingContact = await db.contact.findFirst({
       where: {
-        id,
-        userId: session.user?.id,
-      },
+        id: params.id,
+        owner_id: session.user.id
+      }
     })
 
     if (!existingContact) {
       return NextResponse.json({ error: 'Contact not found' }, { status: 404 })
     }
 
-    // Check for duplicate phone number (excluding current contact)
-    if (phoneNumber && phoneNumber !== existingContact.phoneNumber) {
-      const duplicateContact = await db.contact.findFirst({
+    // Normalize phone number if provided
+    let e164_phone = existingContact.e164_phone
+    if (raw_phone && raw_phone !== existingContact.raw_phone) {
+      e164_phone = normalizePhoneNumber(raw_phone, session.user.default_country_code)
+      
+      // Check if new phone number conflicts with existing contacts
+      const conflictingContact = await db.contact.findFirst({
         where: {
-          userId: session.user?.id,
-          phoneNumber: phoneNumber.trim(),
-          id: { not: id },
-        },
+          owner_id: session.user.id,
+          e164_phone: e164_phone,
+          NOT: {
+            id: params.id
+          }
+        }
       })
 
-      if (duplicateContact) {
-        return NextResponse.json({ error: 'A contact with this phone number already exists' }, { status: 400 })
+      if (conflictingContact) {
+        return NextResponse.json({ error: 'Contact with this phone number already exists' }, { status: 400 })
       }
     }
 
+    // Update contact
     const contact = await db.contact.update({
-      where: { id },
+      where: { id: params.id },
       data: {
-        name: name?.trim() || existingContact.name,
-        phoneNumber: phoneNumber?.trim() || existingContact.phoneNumber,
-        label: label?.trim() || null,
-      },
+        name: name || null,
+        raw_phone: raw_phone || existingContact.raw_phone,
+        e164_phone,
+        label: label || null
+      }
     })
 
     return NextResponse.json(contact)
@@ -71,21 +108,21 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
-
+    // Check if contact exists and belongs to user
     const existingContact = await db.contact.findFirst({
       where: {
-        id,
-        userId: session.user?.id,
-      },
+        id: params.id,
+        owner_id: session.user.id
+      }
     })
 
     if (!existingContact) {
       return NextResponse.json({ error: 'Contact not found' }, { status: 404 })
     }
 
+    // Delete contact
     await db.contact.delete({
-      where: { id },
+      where: { id: params.id }
     })
 
     return NextResponse.json({ message: 'Contact deleted successfully' })
@@ -93,4 +130,34 @@ export async function DELETE(
     console.error('Error deleting contact:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+function normalizePhoneNumber(rawPhone: string, defaultCountryCode?: string): string | null {
+  // Strip all non-digit and non-plus characters
+  let s = rawPhone.replace(/[^\d+]/g, '')
+  
+  if (!s) return null
+  
+  // If it begins with "00", replace leading "00" with "+"
+  if (s.startsWith('00')) {
+    s = '+' + s.substring(2)
+  }
+  
+  // If it begins with "+", keep it
+  if (s.startsWith('+')) {
+    return s
+  }
+  
+  // If it begins with a single "0" and default country code exists
+  if (s.startsWith('0') && defaultCountryCode) {
+    return defaultCountryCode + s.substring(1)
+  }
+  
+  // If it's a plain local number and default country code exists
+  if (defaultCountryCode && s.length <= 10) {
+    return defaultCountryCode + s
+  }
+  
+  // Return as-is (best effort)
+  return s
 }

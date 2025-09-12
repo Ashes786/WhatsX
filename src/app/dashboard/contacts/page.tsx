@@ -2,56 +2,43 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { toast } from 'sonner'
+import { Plus, Edit, Trash2, Contacts, Upload, Download, Search } from 'lucide-react'
 
 interface Contact {
   id: string
-  name: string
-  phoneNumber: string
+  name?: string
+  raw_phone: string
+  e164_phone?: string
   label?: string
-  createdAt: string
-  updatedAt: string
-}
-
-interface UploadResult {
-  added: Contact[]
-  duplicates: Array<{ contact: any; existing: Contact }>
-  errors: Array<{ contact: any; error: string }>
+  added_at: string
+  updated_at: string
 }
 
 export default function ContactsPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
+  const { data: session } = useSession()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingContact, setEditingContact] = useState<Contact | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     name: '',
-    phoneNumber: '',
+    raw_phone: '',
     label: ''
   })
-  const [csvData, setCsvData] = useState('')
-  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null)
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/login')
-      return
-    }
-
     fetchContacts()
-  }, [session, status, router])
+  }, [])
 
   const fetchContacts = async () => {
     try {
@@ -61,7 +48,7 @@ export default function ContactsPage() {
         setContacts(data)
       }
     } catch (error) {
-      toast.error('Failed to fetch contacts')
+      console.error('Failed to fetch contacts:', error)
     } finally {
       setLoading(false)
     }
@@ -70,364 +57,338 @@ export default function ContactsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    const url = editingContact ? `/api/contacts/${editingContact.id}` : '/api/contacts'
+    const method = editingContact ? 'PUT' : 'POST'
+    
     try {
-      const url = editingContact ? `/api/contacts/${editingContact.id}` : '/api/contacts'
-      const method = editingContact ? 'PUT' : 'POST'
-      
-      // For single contact creation, we need to format it as an array
-      const payload = editingContact 
-        ? formData 
-        : { contacts: [formData] }
-
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formData),
       })
 
       if (response.ok) {
-        const result = await response.json()
-        
-        if (editingContact) {
-          toast.success('Contact updated successfully')
-        } else {
-          if (result.added?.length > 0) {
-            toast.success('Contact added successfully')
-          } else if (result.duplicates?.length > 0) {
-            toast.error('This contact already exists')
-          } else if (result.errors?.length > 0) {
-            toast.error('Failed to add contact')
-          }
-        }
-        
-        setIsDialogOpen(false)
+        await fetchContacts()
+        setIsCreateDialogOpen(false)
         setEditingContact(null)
-        setFormData({ name: '', phoneNumber: '', label: '' })
-        fetchContacts()
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Operation failed')
+        setFormData({
+          name: '',
+          raw_phone: '',
+          label: ''
+        })
       }
     } catch (error) {
-      toast.error('An error occurred')
+      console.error('Failed to save contact:', error)
     }
   }
 
-  const handleEdit = (contact: Contact) => {
-    setEditingContact(contact)
-    setFormData({
-      name: contact.name,
-      phoneNumber: contact.phoneNumber,
-      label: contact.label || ''
-    })
-    setIsDialogOpen(true)
-  }
-
   const handleDelete = async (contactId: string) => {
-    if (!confirm('Are you sure you want to delete this contact?')) return
-
     try {
       const response = await fetch(`/api/contacts/${contactId}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
-        toast.success('Contact deleted successfully')
-        fetchContacts()
-      } else {
-        toast.error('Failed to delete contact')
+        await fetchContacts()
       }
     } catch (error) {
-      toast.error('An error occurred')
+      console.error('Failed to delete contact:', error)
     }
   }
 
-  const openDialog = () => {
-    setEditingContact(null)
-    setFormData({ name: '', phoneNumber: '', label: '' })
-    setIsDialogOpen(true)
+  const handleEdit = (contact: Contact) => {
+    setEditingContact(contact)
+    setFormData({
+      name: contact.name || '',
+      raw_phone: contact.raw_phone,
+      label: contact.label || ''
+    })
+    setIsCreateDialogOpen(true)
   }
 
-  const parseCSV = (csvText: string) => {
-    const lines = csvText.trim().split('\n')
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
-    
-    const contacts = []
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim())
-      const contact: any = {}
-      
-      headers.forEach((header, index) => {
-        if (header.includes('name')) {
-          contact.name = values[index]
-        } else if (header.includes('phone') || header.includes('number')) {
-          contact.phoneNumber = values[index]
-        } else if (header.includes('label') || header.includes('tag')) {
-          contact.label = values[index]
-        }
-      })
-      
-      if (contact.name && contact.phoneNumber) {
-        contacts.push(contact)
-      }
-    }
-    
-    return contacts
-  }
+  const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
 
-  const handleCSVUpload = async () => {
-    if (!csvData.trim()) {
-      toast.error('Please enter CSV data')
-      return
-    }
+    const formData = new FormData()
+    formData.append('file', file)
 
     try {
-      const contacts = parseCSV(csvData)
-      
-      if (contacts.length === 0) {
-        toast.error('No valid contacts found in CSV data')
-        return
-      }
-
-      const response = await fetch('/api/contacts', {
+      const response = await fetch('/api/contacts/upload-csv', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ contacts }),
+        body: formData,
       })
 
       if (response.ok) {
-        const result: UploadResult = await response.json()
-        setUploadResult(result)
-        
-        if (result.added.length > 0) {
-          toast.success(`${result.added.length} contacts added successfully`)
-        }
-        
-        if (result.duplicates.length > 0) {
-          toast.warning(`${result.duplicates.length} duplicates found and skipped`)
-        }
-        
-        if (result.errors.length > 0) {
-          toast.error(`${result.errors.length} contacts failed to add`)
-        }
-        
-        fetchContacts()
+        const result = await response.json()
+        alert(`Upload completed: ${result.imported_count} contacts imported, ${result.duplicate_count} duplicates found`)
+        await fetchContacts()
       } else {
         const error = await response.json()
-        toast.error(error.error || 'Failed to upload contacts')
+        alert(`Upload failed: ${error.error}`)
       }
     } catch (error) {
-      toast.error('An error occurred while processing CSV')
+      console.error('Failed to upload CSV:', error)
+      alert('Upload failed. Please try again.')
     }
   }
 
-  if (status === 'loading' || loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  const downloadSampleCSV = () => {
+    const csvContent = `name,phone,label
+John Doe,+1234567890,Friend
+Jane Smith,+1987654321,Colleague
+Bob Johnson,+1555555555,Family`
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'sample_contacts.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={() => router.push('/dashboard')}>
-                ← Back to Dashboard
-              </Button>
-              <h1 className="text-2xl font-bold text-gray-900">Contact Management</h1>
-            </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openDialog}>Add Contact</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <form onSubmit={handleSubmit}>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingContact ? 'Edit Contact' : 'Add New Contact'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {editingContact ? 'Update contact information' : 'Add a new contact to your list'}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="name" className="text-right">
-                        Name
-                      </Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="col-span-3"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="phoneNumber" className="text-right">
-                        Phone
-                      </Label>
-                      <Input
-                        id="phoneNumber"
-                        value={formData.phoneNumber}
-                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                        className="col-span-3"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="label" className="text-right">
-                        Label
-                      </Label>
-                      <Input
-                        id="label"
-                        value={formData.label}
-                        onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                        className="col-span-3"
-                        placeholder="e.g., Client, Lead"
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button type="submit">
-                      {editingContact ? 'Update Contact' : 'Add Contact'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </header>
+  const filteredContacts = contacts.filter(contact =>
+    contact.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.raw_phone.includes(searchTerm) ||
+    contact.label?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <Tabs defaultValue="contacts" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="contacts">Contacts</TabsTrigger>
-              <TabsTrigger value="upload">Upload Contacts</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="contacts" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Contacts</CardTitle>
-                  <CardDescription>
-                    Manage your contact list with automatic duplicate detection
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Phone Number</TableHead>
-                        <TableHead>Label</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {contacts.map((contact) => (
-                        <TableRow key={contact.id}>
-                          <TableCell className="font-medium">{contact.name}</TableCell>
-                          <TableCell>{contact.phoneNumber}</TableCell>
-                          <TableCell>
-                            {contact.label && (
-                              <Badge variant="secondary">{contact.label}</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>{new Date(contact.createdAt).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(contact)}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleDelete(contact.id)}
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  
-                  {contacts.length === 0 && (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">No contacts found</p>
-                      <Button onClick={openDialog}>Add Your First Contact</Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="upload" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Upload Contacts from CSV</CardTitle>
-                  <CardDescription>
-                    Upload multiple contacts at once. Duplicates will be automatically detected and skipped.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="csvData">CSV Data</Label>
-                    <Textarea
-                      id="csvData"
-                      value={csvData}
-                      onChange={(e) => setCsvData(e.target.value)}
-                      rows={10}
-                      placeholder="name,phone_number,label
-John Doe,+1234567890,Client
-Jane Smith,+0987654321,Lead"
-                    />
-                    <p className="text-sm text-gray-500 mt-2">
-                      Expected format: name, phone_number, label (label is optional)
-                    </p>
-                  </div>
-                  
-                  <Button onClick={handleCSVUpload}>Upload Contacts</Button>
-                  
-                  {uploadResult && (
-                    <div className="mt-4 space-y-2">
-                      <h4 className="font-semibold">Upload Results:</h4>
-                      {uploadResult.added.length > 0 && (
-                        <p className="text-green-600">
-                          ✓ {uploadResult.added.length} contacts added successfully
-                        </p>
-                      )}
-                      {uploadResult.duplicates.length > 0 && (
-                        <p className="text-yellow-600">
-                          ⚠ {uploadResult.duplicates.length} duplicates found and skipped
-                        </p>
-                      )}
-                      {uploadResult.errors.length > 0 && (
-                        <p className="text-red-600">
-                          ✗ {uploadResult.errors.length} contacts failed to add
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Contact Management</h1>
+          <p className="text-gray-600 mt-2">Manage your contacts and import from CSV files</p>
         </div>
-      </main>
+        <div className="flex space-x-2">
+          <Button onClick={downloadSampleCSV} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Sample CSV
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => {
+                setEditingContact(null)
+                setFormData({
+                  name: '',
+                  raw_phone: '',
+                  label: ''
+                })
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Contact
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <form onSubmit={handleSubmit}>
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingContact ? 'Edit Contact' : 'Add New Contact'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingContact ? 'Update contact information' : 'Add a new contact to your list'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                      Name
+                    </Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="raw_phone" className="text-right">
+                      Phone
+                    </Label>
+                    <Input
+                      id="raw_phone"
+                      value={formData.raw_phone}
+                      onChange={(e) => setFormData({ ...formData, raw_phone: e.target.value })}
+                      className="col-span-3"
+                      required
+                      placeholder="+1234567890"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="label" className="text-right">
+                      Label
+                    </Label>
+                    <Input
+                      id="label"
+                      value={formData.label}
+                      onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                      className="col-span-3"
+                      placeholder="Friend, Family, etc."
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit">
+                    {editingContact ? 'Update Contact' : 'Add Contact'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <Tabs defaultValue="contacts" className="w-full">
+        <TabsList>
+          <TabsTrigger value="contacts">Contacts</TabsTrigger>
+          <TabsTrigger value="import">Import CSV</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="contacts" className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Search className="h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Search contacts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Contacts</CardTitle>
+              <CardDescription>Manage your contact list</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex justify-center items-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Normalized</TableHead>
+                      <TableHead>Label</TableHead>
+                      <TableHead>Added</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredContacts.map((contact) => (
+                      <TableRow key={contact.id}>
+                        <TableCell className="font-medium">
+                          {contact.name || <span className="text-gray-400">No name</span>}
+                        </TableCell>
+                        <TableCell>{contact.raw_phone}</TableCell>
+                        <TableCell>
+                          {contact.e164_phone ? (
+                            <Badge variant="secondary">{contact.e164_phone}</Badge>
+                          ) : (
+                            <span className="text-gray-400">Not normalized</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {contact.label ? (
+                            <Badge variant="outline">{contact.label}</Badge>
+                          ) : (
+                            <span className="text-gray-400">No label</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(contact.added_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(contact)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the contact
+                                    "{contact.name || contact.raw_phone}".
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(contact.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="import" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Import Contacts from CSV</CardTitle>
+              <CardDescription>
+                Upload a CSV file to import multiple contacts at once
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">
+                    Drop your CSV file here or click to browse
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Supported columns: name, phone, label
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <Input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCSVUpload}
+                    className="max-w-xs mx-auto"
+                  />
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">CSV Format Requirements:</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• File must be in CSV format</li>
+                  <li>• Required column: <code>phone</code></li>
+                  <li>• Optional columns: <code>name</code>, <code>label</code></li>
+                  <li>• Phone numbers will be normalized automatically</li>
+                  <li>• Duplicates will be detected and flagged</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

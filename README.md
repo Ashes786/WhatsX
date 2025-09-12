@@ -1,141 +1,188 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# WhatsX - Messaging Automation Prototype
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+WhatsX is a messaging automation prototype that demonstrates template management, user management, and intelligent duplicate detection for bulk messaging campaigns.
 
-## ✨ Technology Stack
+## Features
 
-This scaffold provides a robust foundation built with:
+### Core Functionality
+- **Template Management**: Create and manage message templates for consistent communication
+- **User Management**: Admin users can manage end users with role-based access control
+- **Contact Management**: Store and organize contacts with CSV import capabilities
+- **Duplicate Detection**: Smart phone number normalization and duplicate prevention
+- **Prepare to Send**: Safely prepare bulk messages with comprehensive duplicate reporting
 
-### 🎯 Core Framework
-- **⚡ Next.js 15** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+### Key Capabilities
+- **Phone Number Normalization**: Automatically converts phone numbers to E.164 format
+- **Duplicate Prevention**: Detects and prevents duplicate messages within uploads and against existing contacts
+- **CSV Import**: Bulk contact import with validation and duplicate detection
+- **Role-Based Access**: Admin and end user roles with appropriate permissions
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
+## Getting Started
 
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
 
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Axios** - Promise-based HTTP client
+### Installation
 
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation Node.js and TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
+1. **Clone or download the project**
+   ```bash
+   # If you have the project as a zip file, extract it
+   # If you have git access:
+   git clone <repository-url>
+   cd whatsx-prototype
+   ```
 
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
+3. **Set up the database**
+   ```bash
+   # Push the database schema
+   npm run db:push
+   
+   # Generate Prisma client
+   npm run db:generate
+   
+   # Seed the database with initial data
+   npm run db:seed
+   ```
 
-## 🎯 Why This Scaffold?
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
+5. **Access the application**
+   - Open your browser and navigate to `http://localhost:3000`
+   - Use the default credentials:
+     - **Admin**: admin@whatsx.com / admin123
+     - **User**: user@whatsx.com / user123
 
-## 🚀 Quick Start
+## Usage Guide
 
-```bash
-# Install dependencies
-npm install
+### For Administrators
 
-# Start development server
-npm run dev
+#### 1. User Management
+- Navigate to Dashboard → Users
+- Create new users with appropriate roles (Admin or End User)
+- Manage user status (Active/Suspended)
+- Set default country codes for phone number normalization
 
-# Build for production
-npm run build
+#### 2. Template Management
+- Navigate to Dashboard → Templates
+- Create message templates that all users can access
+- Templates support personalization with `{{name}}` variables
+- Activate or deactivate templates as needed
 
-# Start production server
-npm start
+#### 3. Monitoring
+- View all user activity through the dashboard
+- Access user contact lists (read-only)
+- Monitor prepare-to-send jobs and results
+
+### For End Users
+
+#### 1. Contact Management
+- Navigate to Dashboard → Contacts
+- Add contacts manually with names and phone numbers
+- Import contacts from CSV files
+- Organize contacts with labels (Friend, Family, Colleague, etc.)
+
+#### 2. Message Preparation
+- Navigate to Dashboard → Prepare to Send
+- Select from available templates or create custom messages
+- Add recipients manually, from contacts, or via CSV upload
+- Review duplicate detection results before finalizing
+
+#### 3. CSV Import Format
+When importing contacts, use this CSV format:
+```csv
+name,phone,label
+John Doe,+1234567890,Friend
+Jane Smith,+1987654321,Colleague
+Bob Johnson,+1555555555,Family
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
+### Phone Number Normalization
 
-## 🤖 Powered by Z.ai
+The system automatically normalizes phone numbers using these rules:
+1. Removes all non-digit and non-plus characters
+2. Converts "00" prefix to "+"
+3. Keeps numbers that start with "+"
+4. For numbers starting with "0", adds the default country code
+5. For local numbers, prepends the default country code
 
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
+### Duplicate Detection
 
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
+The system detects duplicates in these scenarios:
+- **Duplicate in Upload**: Same phone number appears multiple times in the same upload
+- **Existing Contact**: Phone number matches a contact already in your list
+- **Unparseable**: Phone number cannot be normalized or is invalid
 
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
+## Acceptance Criteria
 
-## 📁 Project Structure
+The prototype successfully demonstrates:
 
-```
-src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
-```
+✅ **Admin User Management**
+- Admin can create, update, and delete end users
+- Role-based access control is properly enforced
+- User status management (Active/Suspended)
 
-## 🎨 Available Features & Components
+✅ **Template Management**
+- Admin can create, update, and delete templates
+- Templates are available to all users
+- Template activation/deactivation functionality
 
-This scaffold includes a comprehensive set of modern web development tools:
+✅ **Duplicate Contact Handling**
+- Phone numbers are properly normalized
+- Duplicates are detected within uploads
+- Duplicates are detected against existing contacts
+- Comprehensive duplicate reporting with reasons
 
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
+✅ **User Interface**
+- All required screens are implemented and functional
+- Responsive design works on all device sizes
+- Clear navigation and user-friendly interface
+- Proper error handling and validation messages
 
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
+## Technical Notes
 
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
+### Architecture
+- **Frontend**: React with Next.js 15 and TypeScript
+- **Backend**: Next.js API routes with server-side logic
+- **Database**: SQLite with Prisma ORM
+- **Authentication**: Session-based authentication
+- **UI Components**: Modern, accessible component library
 
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Axios + TanStack Query
-- **State Management**: Simple and scalable with Zustand
+### Security
+- Passwords are securely hashed
+- Role-based access control
+- Input validation and sanitization
+- Protection against common web vulnerabilities
 
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
+### Performance
+- Optimized for small to medium datasets
+- Efficient database queries
+- Responsive design for all devices
+- Proper error handling without exposing sensitive information
 
-## 🤝 Get Started with Z.ai
+## Limitations (Prototype Scope)
 
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
+This prototype intentionally excludes certain features to focus on the core requirements:
 
----
+- **Actual Message Sending**: The "Prepare to Send" flow demonstrates duplicate detection but does not integrate with WhatsApp or other messaging services
+- **Advanced User Management**: Features like password reset, email verification, and user profiles are simplified
+- **Advanced Template Features**: Rich text editing, media attachments, and advanced personalization are not included
+- **Scalability**: The prototype is optimized for demonstration purposes, not for large-scale production use
+- **Advanced Reporting**: Detailed analytics and reporting features are beyond the prototype scope
 
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+## Support
+
+For questions or issues with the prototype, please refer to the project documentation or contact the development team.
+
+## License
+
+This prototype is developed for educational and demonstration purposes.
