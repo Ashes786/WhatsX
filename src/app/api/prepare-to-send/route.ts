@@ -5,6 +5,45 @@ import { db } from '@/lib/db'
 import { normalizePhoneNumber, dedupeRecipients, generateMessagePreview } from '@/lib/phone-utils'
 import { prepareToSendSchema, handleApiError, createSuccessResponse, AppError } from '@/lib/validation'
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session) {
+      throw new AppError('Unauthorized', 401)
+    }
+
+    // Get recent prepare-to-send jobs for the current user
+    const jobs = await db.prepareToSendJob.findMany({
+      where: {
+        user_id: session.user.id
+      },
+      orderBy: {
+        created_at: 'desc'
+      },
+      take: 10, // Limit to last 10 jobs
+      select: {
+        id: true,
+        message_preview: true,
+        recipients_final: true,
+        created_at: true,
+        template_id: true
+      }
+    })
+
+    // Parse JSON fields
+    const parsedJobs = jobs.map(job => ({
+      ...job,
+      recipients_final: JSON.parse(job.recipients_final),
+      created_at: job.created_at.toISOString()
+    }))
+
+    return createSuccessResponse(parsedJobs)
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)

@@ -36,6 +36,16 @@ interface PrepareJob {
   created_at: string
 }
 
+interface Activity {
+  id: string
+  type: string
+  title: string
+  description: string
+  time: string
+  icon: any
+  color: string
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession()
   const userRole = session?.user.role
@@ -47,7 +57,7 @@ export default function DashboardPage() {
     activeUsers: 0
   })
   
-  const [recentActivity, setRecentActivity] = useState<any[]>([])
+  const [recentActivity, setRecentActivity] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -70,36 +80,34 @@ export default function DashboardPage() {
         setStats(prev => ({ ...prev, contacts: contacts.length }))
       }
 
-      // Fetch recent prepare jobs (mock data for now)
-      setRecentActivity([
-        {
-          id: '1',
-          type: 'template_created',
-          title: 'Welcome Message template created',
-          description: 'New template added by Admin',
-          time: '2 hours ago',
-          icon: FileText,
-          color: 'text-blue-600'
-        },
-        {
-          id: '2',
-          type: 'contacts_imported',
-          title: '15 contacts imported',
-          description: 'From CSV file',
-          time: '5 hours ago',
-          icon: Contact,
-          color: 'text-green-600'
-        },
-        {
-          id: '3',
+      // Fetch recent prepare jobs from API
+      const prepareResponse = await fetch('/api/prepare-to-send')
+      if (prepareResponse.ok) {
+        const prepareJobs = await prepareResponse.json()
+        setStats(prev => ({ ...prev, recentJobs: prepareJobs.length }))
+        
+        // Convert prepare jobs to activity items
+        const jobActivities = prepareJobs.slice(0, 3).map((job: PrepareJob, index: number) => ({
+          id: job.id,
           type: 'message_prepared',
-          title: 'Message prepared for 50 recipients',
-          description: 'Duplicate detection completed',
-          time: '1 day ago',
+          title: `Message prepared for ${job.recipients_final.length} recipients`,
+          description: job.message_preview.substring(0, 50) + '...',
+          time: index === 0 ? 'Just now' : index === 1 ? '1 hour ago' : '2 hours ago',
           icon: Send,
           color: 'text-purple-600'
+        }))
+        setRecentActivity(jobActivities)
+      }
+
+      // Fetch active users if admin
+      if (userRole === 'ADMIN') {
+        const usersResponse = await fetch('/api/admin/users')
+        if (usersResponse.ok) {
+          const users = await usersResponse.json()
+          const activeUsers = users.filter((user: any) => user.status === 'ACTIVE').length
+          setStats(prev => ({ ...prev, activeUsers }))
         }
-      ])
+      }
 
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
@@ -122,7 +130,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-6 h-full">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -136,7 +144,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 h-full overflow-y-auto">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -180,7 +188,7 @@ export default function DashboardPage() {
               <Users className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">12</div>
+              <div className="text-2xl font-bold text-green-600">{stats.activeUsers}</div>
               <p className="text-xs text-gray-500">
                 Total registered users
               </p>
@@ -215,7 +223,7 @@ export default function DashboardPage() {
             <Send className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">247</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.recentJobs}</div>
             <p className="text-xs text-gray-500">
               Total prepared messages
             </p>

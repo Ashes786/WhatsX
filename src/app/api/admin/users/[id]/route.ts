@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { handleApiError, createSuccessResponse, AppError } from '@/lib/validation'
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +13,7 @@ export async function GET(
     const session = await getServerSession(authOptions)
     
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      throw new AppError('Unauthorized', 401)
     }
 
     const user = await db.user.findUnique({
@@ -30,13 +31,12 @@ export async function GET(
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      throw new AppError('User not found', 404)
     }
 
-    return NextResponse.json(user)
+    return createSuccessResponse(user)
   } catch (error) {
-    console.error('Error fetching user:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return handleApiError(error)
   }
 }
 
@@ -48,7 +48,7 @@ export async function PUT(
     const session = await getServerSession(authOptions)
     
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      throw new AppError('Unauthorized', 401)
     }
 
     const body = await request.json()
@@ -60,7 +60,7 @@ export async function PUT(
     })
 
     if (!existingUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      throw new AppError('User not found', 404)
     }
 
     // Check if email is already taken by another user
@@ -70,7 +70,7 @@ export async function PUT(
       })
 
       if (emailTaken) {
-        return NextResponse.json({ error: 'Email already taken' }, { status: 400 })
+        throw new AppError('Email already taken', 400)
       }
     }
 
@@ -104,10 +104,9 @@ export async function PUT(
       }
     })
 
-    return NextResponse.json(user)
+    return createSuccessResponse(user)
   } catch (error) {
-    console.error('Error updating user:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return handleApiError(error)
   }
 }
 
@@ -119,7 +118,7 @@ export async function DELETE(
     const session = await getServerSession(authOptions)
     
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      throw new AppError('Unauthorized', 401)
     }
 
     // Check if user exists
@@ -128,7 +127,7 @@ export async function DELETE(
     })
 
     if (!existingUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      throw new AppError('User not found', 404)
     }
 
     // Delete user
@@ -136,9 +135,8 @@ export async function DELETE(
       where: { id: params.id }
     })
 
-    return NextResponse.json({ message: 'User deleted successfully' })
+    return createSuccessResponse({ message: 'User deleted successfully' })
   } catch (error) {
-    console.error('Error deleting user:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return handleApiError(error)
   }
 }

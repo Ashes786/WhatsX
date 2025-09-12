@@ -123,8 +123,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </SidebarFooter>
         </Sidebar>
         
-        <main className="flex-1 overflow-auto">
-          {children}
+        <main className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            {children}
+          </div>
         </main>
       </div>
     </SidebarProvider>

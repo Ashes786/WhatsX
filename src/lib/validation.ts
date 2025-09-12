@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { NextResponse } from 'next/server'
 
 // User validation schemas
 export const createUserSchema = z.object({
