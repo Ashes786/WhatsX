@@ -59,15 +59,7 @@ const menuItems = [
     title: 'Templates',
     url: '/dashboard/templates',
     icon: FileText,
-    adminOnly: true,
     description: 'Manage message templates'
-  },
-  {
-    title: 'Templates',
-    url: '/dashboard/templates',
-    icon: FileText,
-    userOnly: true,
-    description: 'Available message templates'
   },
   {
     title: 'Contacts',
