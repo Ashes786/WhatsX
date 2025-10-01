@@ -311,7 +311,9 @@ export default function PrepareToSendPage() {
                     value={recipientsRaw}
                     onChange={(e) => setRecipientsRaw(e.target.value)}
                     rows={4}
-                    placeholder="+1234567890&#10;+1987654321&#10;+1555555555"
+                    placeholder="+1234567890
++1987654321
++1555555555"
                   />
                 </div>
 
@@ -454,35 +456,19 @@ export default function PrepareToSendPage() {
                         Deduplicated list of recipients who will receive the message
                       </CardDescription>
                     </div>
-                    <Button variant="outline" onClick={downloadRecipientsCSV}>
+                    <Button variant="outline" size="sm" onClick={downloadRecipientsCSV}>
                       <Download className="h-4 w-4 mr-2" />
                       Download CSV
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="max-h-64 overflow-y-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Phone Number</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {result.recipients_final.map((phone, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{phone}</TableCell>
-                            <TableCell>
-                              <Badge variant="default">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Ready
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                  <div className="border rounded-md p-4 max-h-48 overflow-y-auto">
+                    {result.recipients_final.map((phone, index) => (
+                      <div key={index} className="py-1">
+                        <span className="font-mono text-sm">{phone}</span>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -495,63 +481,52 @@ export default function PrepareToSendPage() {
                       <div>
                         <CardTitle>Duplicates Report</CardTitle>
                         <CardDescription>
-                          Numbers that were removed due to duplication issues
+                          Numbers that were removed as duplicates
                         </CardDescription>
                       </div>
-                      <Button variant="outline" onClick={downloadDuplicatesCSV}>
+                      <Button variant="outline" size="sm" onClick={downloadDuplicatesCSV}>
                         <Download className="h-4 w-4 mr-2" />
                         Download Report
                       </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="max-h-64 overflow-y-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Raw Number</TableHead>
-                            <TableHead>Normalized</TableHead>
-                            <TableHead>Reason</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {result.duplicates.map((duplicate, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-medium">{duplicate.raw}</TableCell>
-                              <TableCell>{duplicate.normalized || '-'}</TableCell>
-                              <TableCell>
-                                <Badge className={getReasonColor(duplicate.reason)}>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Raw Number</TableHead>
+                          <TableHead>Normalized</TableHead>
+                          <TableHead>Reason</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {result.duplicates.map((duplicate, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-mono">{duplicate.raw}</TableCell>
+                            <TableCell className="font-mono">{duplicate.normalized || '-'}</TableCell>
+                            <TableCell>
+                              <Badge className={getReasonColor(duplicate.reason)}>
+                                <span className="flex items-center space-x-1">
                                   {getReasonIcon(duplicate.reason)}
-                                  <span className="ml-1 capitalize">
-                                    {duplicate.reason.replace(/_/g, ' ')}
-                                  </span>
-                                </Badge>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                                  <span>{duplicate.reason.replace('_', ' ')}</span>
+                                </span>
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </CardContent>
                 </Card>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex justify-center space-x-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setResult(null)
-                    setActiveTab('compose')
-                  }}
-                >
-                  Edit Message
-                </Button>
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                  <Send className="h-4 w-4 mr-2" />
-                  Queue for Sending
-                </Button>
-              </div>
+              {/* Success Message */}
+              <Alert>
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Your campaign has been prepared successfully! You can now download the final recipient list and duplicates report.
+                </AlertDescription>
+              </Alert>
             </>
           )}
         </TabsContent>

@@ -1,3 +1,9 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,73 +14,85 @@ datasource db {
 }
 
 model User {
-  id                   String             @id @default(uuid())
-  name                 String
-  email                String             @unique
-  password_hash        String
-  role                 UserRole           @default(END_USER)
-  status               UserStatus         @default(ACTIVE)
-  default_country_code String?
-  created_at           DateTime           @default(now())
-  updated_at           DateTime           @updatedAt
-  contacts             Contact[]
-  prepare_to_send_jobs PrepareToSendJob[]
-  created_templates    Template[]
-
-  @@map("users")
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("END_USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  templates   Template[]
+  contacts    Contact[]
+  messages    Message[]
+  campaigns   Campaign[]
 }
 
 model Template {
-  id                   String             @id @default(uuid())
-  title                String
-  content              String
-  created_by           String
-  is_active            Boolean            @default(true)
-  created_at           DateTime           @default(now())
-  updated_at           DateTime           @updatedAt
-  prepare_to_send_jobs PrepareToSendJob[]
-  creator              User               @relation(fields: [created_by], references: [id])
-
-  @@unique([title, created_by])
-  @@map("templates")
+  id          String   @id @default(cuid())
+  name        String
+  content     String
+  category    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  messages    Message[]
 }
 
 model Contact {
-  id         String   @id @default(uuid())
-  owner_id   String
-  name       String?
-  raw_phone  String
-  e164_phone String?
-  label      String?
-  added_at   DateTime @default(now())
-  updated_at DateTime @updatedAt
-  owner      User     @relation(fields: [owner_id], references: [id])
-
-  @@unique([owner_id, e164_phone])
-  @@map("contacts")
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  email       String?
+  tags        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  messages    Message[]
+  campaigns   Campaign[]
 }
 
-model PrepareToSendJob {
-  id               String    @id @default(uuid())
-  user_id          String
-  template_id      String?
-  message_preview  String
-  recipients_raw   String
-  recipients_final String
-  duplicates       String
-  created_at       DateTime  @default(now())
-  template         Template? @relation(fields: [template_id], references: [id])
-  user             User      @relation(fields: [user_id], references: [id])
-
-  @@map("prepare_to_send_jobs")
+model Message {
+  id          String   @id @default(cuid())
+  content     String
+  status      String   @default("PENDING")
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  contactId   String
+  contact     Contact  @relation(fields: [contactId], references: [id])
+  templateId  String?
+  template    Template? @relation(fields: [templateId], references: [id])
+  campaignId  String?
+  campaign    Campaign? @relation(fields: [campaignId], references: [id])
 }
 
-enum UserRole {
-  ADMIN
-  END_USER
-}
-
-enum UserStatus {
-  ACTIVE
-  SUSPENDED
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String   @default("DRAFT")
+  scheduledAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  messages    Message[]
+  contacts    Contact[]
 }

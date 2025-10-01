@@ -1,20 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2 } from 'lucide-react'
 
-export default function LoginPage() {
+export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,19 +23,35 @@ export default function LoginPage() {
     setError('')
 
     try {
+      console.log('SIGNIN DEBUG: Attempting sign in with:', email)
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false
+        redirect: false,
       })
 
+      console.log('SIGNIN DEBUG: Sign in result:', result)
+
       if (result?.error) {
-        setError('Invalid email or password')
+        console.error('SIGNIN DEBUG: Sign in error:', result.error)
+        setError(`Authentication failed: ${result.error}`)
       } else {
-        router.push('/dashboard')
+        console.log('SIGNIN DEBUG: Sign in successful, getting session...')
+        // Get session to check user role
+        const session = await getSession()
+        console.log('SIGNIN DEBUG: Session retrieved:', session)
+        
+        if (session?.user?.role) {
+          console.log('SIGNIN DEBUG: User role found:', session.user.role)
+          router.push('/dashboard')
+        } else {
+          console.error('SIGNIN DEBUG: No session or user role found')
+          setError('Authentication successful but no session data found')
+        }
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.')
+    } catch (error) {
+      console.error('SIGNIN DEBUG: Sign in exception:', error)
+      setError(`An error occurred: ${error.message || 'Please try again.'}`)
     } finally {
       setIsLoading(false)
     }
@@ -45,9 +61,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Login to WhatsX</CardTitle>
+          <CardTitle>Sign In</CardTitle>
           <CardDescription>
-            Enter your credentials to access the messaging platform
+            Enter your credentials to access the WhatsX platform
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -80,30 +96,25 @@ export default function LoginPage() {
               </Alert>
             )}
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <Button variant="link" onClick={() => alert('Forgot password functionality will be available soon')}>
-              Forgot password?
-            </Button>
-            <p className="text-sm text-gray-600 mt-2">
+          
+          <div className="mt-4 text-center text-sm">
+            <p>
               Don't have an account?{' '}
-              <Button 
-                variant="link" 
-                onClick={() => router.push('/auth/signup')}
-                className="p-0 h-auto font-medium"
-              >
+              <Link href="/auth/signup" className="text-blue-600 hover:underline">
                 Sign up
-              </Button>
+              </Link>
             </p>
+          </div>
+          
+          <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+            <h3 className="font-semibold mb-2">Test Accounts:</h3>
+            <div className="space-y-1 text-sm">
+              <p><strong>Admin:</strong> admin@whatsx.com / admin123</p>
+              <p><strong>User:</strong> user@whatsx.com / user123</p>
+            </div>
           </div>
         </CardContent>
       </Card>

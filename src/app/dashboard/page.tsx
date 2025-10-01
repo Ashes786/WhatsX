@@ -265,6 +265,32 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {userRole === 'END_USER' && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 text-lg">User Tasks</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      onClick={() => window.location.href = '/dashboard/contacts'}
+                      className="flex items-center gap-3 h-12"
+                    >
+                      <Users className="h-5 w-5" />
+                      Manage Contacts
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      onClick={() => window.location.href = '/dashboard/prepare'}
+                      className="flex items-center gap-3 h-12"
+                    >
+                      <Send className="h-5 w-5" />
+                      Create Campaign
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               {userRole === 'ADMIN' && (
                 <div className="space-y-4">
                   <h4 className="font-medium text-gray-900 text-lg">Admin Tasks</h4>
@@ -285,26 +311,11 @@ export default function DashboardPage() {
                       className="flex items-center gap-3 h-12"
                     >
                       <FileText className="h-5 w-5" />
-                      Create Template
+                      Manage Templates
                     </Button>
                   </div>
                 </div>
               )}
-              
-              <div className="space-y-4">
-                <h4 className="font-medium text-gray-900 text-lg">User Tasks</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    onClick={() => window.location.href = '/messages'}
-                    className="flex items-center gap-3 h-12"
-                  >
-                    <Send className="h-5 w-5" />
-                    Create Messages
-                  </Button>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>

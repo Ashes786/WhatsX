@@ -13,7 +13,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X
+  X,
+  Contact,
+  MessageSquare,
+  Send
 } from 'lucide-react'
 
 interface DashboardLayoutProps {
@@ -27,6 +30,24 @@ const menuItems = [
     icon: LayoutDashboard,
   },
   {
+    title: 'Contacts',
+    url: '/dashboard/contacts',
+    icon: Contact,
+    userOnly: true,
+  },
+  {
+    title: 'Messages',
+    url: '/dashboard/messages',
+    icon: MessageSquare,
+    userOnly: true,
+  },
+  {
+    title: 'Campaigns',
+    url: '/dashboard/prepare',
+    icon: Send,
+    userOnly: true,
+  },
+  {
     title: 'Users',
     url: '/dashboard/users',
     icon: Users,
@@ -36,6 +57,7 @@ const menuItems = [
     title: 'Templates',
     url: '/dashboard/templates',
     icon: FileText,
+    adminOnly: true,
   },
 ]
 
@@ -62,7 +84,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     
     if (status === 'loading') return
     if (status === 'unauthenticated') {
-      router.push('/auth/login')
+      router.push('/auth/signin')
     }
   }, [status, router])
 
@@ -87,7 +109,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   const userRole = session.user.role
-  const filteredMenuItems = menuItems.filter(item => !item.adminOnly || userRole === 'ADMIN')
+  const filteredMenuItems = menuItems.filter(item => {
+    // Show items without restrictions
+    if (!item.adminOnly && !item.userOnly) return true
+    
+    // Show admin-only items to admins
+    if (item.adminOnly && userRole === 'ADMIN') return true
+    
+    // Show user-only items to end users
+    if (item.userOnly && userRole === 'END_USER') return true
+    
+    // Hide restricted items
+    return false
+  })
 
   return (
     <SidebarProvider>
