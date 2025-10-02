@@ -13,37 +13,27 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log('AUTH DEBUG: Authorize function called with email:', credentials?.email)
-          
           if (!credentials?.email || !credentials?.password) {
-            console.log('AUTH DEBUG: Missing credentials')
             return null
           }
 
-          console.log('AUTH DEBUG: Looking for user in database...')
           const user = await db.user.findUnique({
-            where: {
-              email: credentials.email
-            }
+            where: { email: credentials.email }
           })
 
           if (!user) {
-            console.log('AUTH DEBUG: User not found in database:', credentials.email)
             return null
           }
 
-          console.log('AUTH DEBUG: User found, comparing passwords...')
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
           )
 
           if (!isPasswordValid) {
-            console.log('AUTH DEBUG: Invalid password for user:', credentials.email)
             return null
           }
 
-          console.log('AUTH DEBUG: Password valid, returning user object')
           return {
             id: user.id,
             email: user.email,
@@ -51,7 +41,7 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
           }
         } catch (error) {
-          console.error('AUTH DEBUG: Authorization error:', error)
+          console.error('Authorization error:', error)
           return null
         }
       }
@@ -59,25 +49,31 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role
+        token.id = user.id
+        console.log('JWT token created with user:', user)
       }
+      console.log('JWT callback - token:', token)
       return token
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.sub!
+        session.user.id = token.id as string
         session.user.role = token.role as string
+        console.log('Session created with token:', token)
       }
+      console.log('Session callback - session:', session)
       return session
     }
   },
   pages: {
-    signIn: '/auth/signin',
-    signUp: '/auth/signup',
+    signIn: '/auth/signin'
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: true, // Enable debug mode
 }

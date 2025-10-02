@@ -144,7 +144,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-6 h-full">
+      <div className="h-full">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -158,11 +158,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-8 space-y-8 h-full overflow-y-auto">
+    <div className="space-y-4 h-full overflow-y-auto bg-gray-50">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center px-4 pt-4 pb-2">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-1">Dashboard</h1>
           <p className="text-gray-600">
             Welcome back, {session?.user.name}! Here's your comprehensive platform overview.
           </p>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className={`px-4 grid grid-cols-1 md:grid-cols-2 ${userRole === 'ADMIN' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4`}>
         <Card className="border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Templates</CardTitle>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="px-4 grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
           <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
             <CardHeader>
@@ -365,39 +365,41 @@ export default function DashboardPage() {
       </div>
 
       {/* System Status */}
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl">
-            <CheckCircle className="h-6 w-6 mr-3 text-green-600" />
-            System Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-green-800">API Service</span>
+      <div className="px-4 pb-4">
+        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl">
+              <CheckCircle className="h-6 w-6 mr-3 text-green-600" />
+              System Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-green-800">API Service</span>
+                </div>
+                <span className="text-sm font-medium text-green-600">Operational</span>
               </div>
-              <span className="text-sm font-medium text-green-600">Operational</span>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-green-800">Database</span>
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-green-800">Database</span>
+                </div>
+                <span className="text-sm font-medium text-green-600">Connected</span>
               </div>
-              <span className="text-sm font-medium text-green-600">Connected</span>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-green-800">WhatsApp API</span>
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-green-800">WhatsApp</span>
+                </div>
+                <span className="text-sm font-medium text-green-600">Ready</span>
               </div>
-              <span className="text-sm font-medium text-green-600">Ready</span>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

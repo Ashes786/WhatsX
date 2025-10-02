@@ -36,17 +36,24 @@ export default function SignIn() {
         console.error('SIGNIN DEBUG: Sign in error:', result.error)
         setError(`Authentication failed: ${result.error}`)
       } else {
-        console.log('SIGNIN DEBUG: Sign in successful, getting session...')
-        // Get session to check user role
+        console.log('SIGNIN DEBUG: Sign in successful, waiting for session...')
+        // Wait a moment for session to be established
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Check session
         const session = await getSession()
-        console.log('SIGNIN DEBUG: Session retrieved:', session)
+        console.log('SIGNIN DEBUG: Session after delay:', session)
         
         if (session?.user?.role) {
           console.log('SIGNIN DEBUG: User role found:', session.user.role)
           router.push('/dashboard')
+          router.refresh()
         } else {
-          console.error('SIGNIN DEBUG: No session or user role found')
-          setError('Authentication successful but no session data found')
+          console.error('SIGNIN DEBUG: No session or user role found after delay')
+          // Even if session is not immediately available, redirect to dashboard
+          // The dashboard layout will handle session validation
+          router.push('/dashboard')
+          router.refresh()
         }
       }
     } catch (error) {

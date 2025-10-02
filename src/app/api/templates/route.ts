@@ -14,21 +14,28 @@ export async function GET() {
 
     const templates = await db.template.findMany({
       include: {
-        creator: {
+        user: {
           select: {
             name: true
           }
         }
       },
       orderBy: {
-        created_at: 'desc'
+        createdAt: 'desc'
       }
     })
 
     // Transform the response to include creator_name
     const transformedTemplates = templates.map(template => ({
-      ...template,
-      creator_name: template.creator.name
+      id: template.id,
+      name: template.name,
+      content: template.content,
+      category: template.category,
+      isActive: template.isActive,
+      createdAt: template.createdAt,
+      updatedAt: template.updatedAt,
+      userId: template.userId,
+      creator_name: template.user.name
     }))
 
     return createSuccessResponse(transformedTemplates)

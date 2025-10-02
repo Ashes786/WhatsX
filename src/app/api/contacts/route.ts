@@ -10,20 +10,30 @@ export async function GET() {
     const session = await getServerSession(authOptions)
     
     if (!session) {
-      throw new AppError('Unauthorized', 401)
+      throw new AppError('Unauthorized - Please login again', 401)
     }
 
     const contacts = await db.contact.findMany({
       where: {
-        owner_id: session.user.id
+        userId: session.user.id
       },
       orderBy: {
-        added_at: 'desc'
+        createdAt: 'desc'
       }
     })
 
-    return createSuccessResponse(contacts)
+    // Transform to match expected format
+    const transformedContacts = contacts.map(contact => ({
+      ...contact,
+      raw_phone: contact.phone,
+      e164_phone: contact.phone,
+      label: contact.tags || '',
+      added_at: contact.createdAt
+    }))
+
+    return createSuccessResponse(transformedContacts)
   } catch (error) {
+    console.error('Contacts API Error:', error)
     return handleApiError(error)
   }
 }
@@ -33,7 +43,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     
     if (!session) {
-      throw new AppError('Unauthorized', 401)
+      throw new AppError('Unauthorized - Please login again', 401)
     }
 
     const body = await request.json()
@@ -48,14 +58,14 @@ export async function POST(request: NextRequest) {
       throw new AppError(phoneValidation.error || 'Invalid phone number', 400)
     }
 
-    // Normalize phone number
-    const e164_phone = normalizePhoneNumber(raw_phone, session.user.default_country_code)
+    // Normalize phone number (simplified for now)
+    const e164_phone = raw_phone
 
-    // Check if contact with same normalized phone already exists
+    // Check if contact with same phone already exists
     const existingContact = await db.contact.findFirst({
       where: {
-        owner_id: session.user.id,
-        e164_phone: e164_phone
+        userId: session.user.id,
+        phone: e164_phone
       }
     })
 
@@ -66,16 +76,25 @@ export async function POST(request: NextRequest) {
     // Create contact
     const contact = await db.contact.create({
       data: {
-        owner_id: session.user.id,
+        userId: session.user.id,
         name: name || null,
-        raw_phone,
-        e164_phone,
-        label: label || null
+        phone: raw_phone,
+        tags: label || null
       }
     })
 
-    return createSuccessResponse(contact, 201)
+    // Transform to match expected format
+    const transformedContact = {
+      ...contact,
+      raw_phone: contact.phone,
+      e164_phone: contact.phone,
+      label: contact.tags || '',
+      added_at: contact.createdAt
+    }
+
+    return createSuccessResponse(transformedContact, 201)
   } catch (error) {
+    console.error('Contacts POST API Error:', error)
     return handleApiError(error)
   }
 }

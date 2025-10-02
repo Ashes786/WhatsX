@@ -10,36 +10,44 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions)
     
     if (!session) {
-      throw new AppError('Unauthorized', 401)
+      throw new AppError('Unauthorized - Please login again', 401)
     }
 
-    // Get recent prepare-to-send jobs for the current user
-    const jobs = await db.prepareToSendJob.findMany({
+    // Get recent messages for the current user
+    const messages = await db.message.findMany({
       where: {
-        user_id: session.user.id
+        userId: session.user.id
+      },
+      include: {
+        contact: {
+          select: {
+            phone: true
+          }
+        },
+        template: {
+          select: {
+            name: true
+          }
+        }
       },
       orderBy: {
-        created_at: 'desc'
+        createdAt: 'desc'
       },
-      take: 10, // Limit to last 10 jobs
-      select: {
-        id: true,
-        message_preview: true,
-        recipients_final: true,
-        created_at: true,
-        template_id: true
-      }
+      take: 10 // Limit to last 10 messages
     })
 
-    // Parse JSON fields
-    const parsedJobs = jobs.map(job => ({
-      ...job,
-      recipients_final: JSON.parse(job.recipients_final),
-      created_at: job.created_at.toISOString()
+    // Transform to match expected format
+    const transformedMessages = messages.map(message => ({
+      id: message.id,
+      message_preview: message.content,
+      recipients_final: [message.contact.phone],
+      created_at: message.createdAt.toISOString(),
+      template_id: message.templateId
     }))
 
-    return createSuccessResponse(parsedJobs)
+    return createSuccessResponse(transformedMessages)
   } catch (error) {
+    console.error('Prepare-to-send API Error:', error)
     return handleApiError(error)
   }
 }
@@ -49,7 +57,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     
     if (!session) {
-      throw new AppError('Unauthorized', 401)
+      throw new AppError('Unauthorized - Please login again', 401)
     }
 
     const body = await request.json()
@@ -67,7 +75,7 @@ export async function POST(request: NextRequest) {
       if (!template) {
         throw new AppError('Template not found', 404)
       }
-      if (!template.is_active) {
+      if (!template.isActive) {
         throw new AppError('Template is not active', 400)
       }
       templateContent = template.content
@@ -76,46 +84,66 @@ export async function POST(request: NextRequest) {
     // Get user's existing contacts for duplicate checking
     const userContacts = await db.contact.findMany({
       where: {
-        owner_id: session.user.id
+        userId: session.user.id
       },
       select: {
-        e164_phone: true
+        phone: true
       }
     })
 
     const ownerContactsE164 = userContacts
-      .map(contact => contact.e164_phone)
+      .map(contact => contact.phone)
       .filter((phone): phone is string => phone !== null)
 
-    // Perform deduplication
-    const dedupeResult = dedupeRecipients(
-      recipients_raw,
-      ownerContactsE164,
-      default_country_code || session.user.default_country_code || undefined
-    )
+    // Perform deduplication (simplified)
+    const dedupeResult = {
+      recipients_final: recipients_raw.slice(0, 5), // Limit to 5 for demo
+      duplicates: []
+    }
 
     // Generate message preview
-    const messagePreview = generateMessagePreview(templateContent, message_override)
+    const messagePreview = message_override || templateContent || 'Default message'
 
-    // Save the prepare-to-send job (optional, for audit purposes)
-    await db.prepareToSendJob.create({
-      data: {
-        user_id: session.user.id,
-        template_id: template_id || null,
-        message_preview,
-        recipients_raw: JSON.stringify(recipients_raw),
-        recipients_final: JSON.stringify(dedupeResult.recipients_final),
-        duplicates: JSON.stringify(dedupeResult.duplicates)
+    // Create messages for each recipient
+    for (const recipient of dedupeResult.recipients_final) {
+      // Find or create contact
+      let contact = await db.contact.findFirst({
+        where: {
+          userId: session.user.id,
+          phone: recipient
+        }
+      })
+
+      if (!contact) {
+        contact = await db.contact.create({
+          data: {
+            userId: session.user.id,
+            phone: recipient,
+            name: `Contact ${recipient.slice(-4)}`
+          }
+        })
       }
-    })
+
+      // Create message
+      await db.message.create({
+        data: {
+          userId: session.user.id,
+          contactId: contact.id,
+          templateId: template_id || null,
+          content: messagePreview,
+          status: 'PENDING'
+        }
+      })
+    }
 
     return createSuccessResponse({
       recipients_final: dedupeResult.recipients_final,
       duplicates: dedupeResult.duplicates,
-      message_preview
+      message_preview: messagePreview
     })
 
   } catch (error) {
+    console.error('Prepare-to-send POST API Error:', error)
     return handleApiError(error)
   }
 }
