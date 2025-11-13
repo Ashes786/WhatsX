@@ -7,7 +7,7 @@ async function main() {
   console.log('Seeding database...')
 
   // Create admin user
-  const adminPassword = await bcrypt.hash('admin123', 10) // Reduced rounds for testing
+  const adminPassword = await bcrypt.hash('admin123', 10)
   console.log('Admin password hash:', adminPassword)
   
   const admin = await prisma.user.upsert({
@@ -16,48 +16,48 @@ async function main() {
     create: {
       email: 'admin@whatsx.com',
       name: 'Admin User',
-      password: adminPassword,
+      passwordHash: adminPassword,
       role: 'ADMIN',
+      status: 'ACTIVE',
     },
   })
 
-  // Create regular user
-  const userPassword = await bcrypt.hash('user123', 10) // Reduced rounds for testing
-  console.log('User password hash:', userPassword)
+  // Create operator user
+  const operatorPassword = await bcrypt.hash('operator123', 10)
+  console.log('Operator password hash:', operatorPassword)
   
-  const user = await prisma.user.upsert({
-    where: { email: 'user@whatsx.com' },
+  const operator = await prisma.user.upsert({
+    where: { email: 'operator@whatsx.com' },
     update: {},
     create: {
-      email: 'user@whatsx.com',
-      name: 'Regular User',
-      password: userPassword,
-      role: 'END_USER',
+      email: 'operator@whatsx.com',
+      name: 'Operator User',
+      passwordHash: operatorPassword,
+      role: 'OPERATOR',
+      status: 'ACTIVE',
     },
   })
 
   // Test password verification
   const adminTest = await bcrypt.compare('admin123', adminPassword)
-  const userTest = await bcrypt.compare('user123', userPassword)
+  const operatorTest = await bcrypt.compare('operator123', operatorPassword)
   
   console.log('Admin password verification:', adminTest)
-  console.log('User password verification:', userTest)
+  console.log('Operator password verification:', operatorTest)
 
   // Create some sample templates
   const template1 = await prisma.template.create({
     data: {
-      name: 'Welcome Message',
+      title: 'Welcome Message',
       content: 'Hello {name}, welcome to our service!',
-      category: 'Welcome',
       userId: admin.id,
     },
   })
 
   const template2 = await prisma.template.create({
     data: {
-      name: 'Promotional Offer',
+      title: 'Promotional Offer',
       content: 'Hi {name}, check out our latest offer: {offer}',
-      category: 'Promotion',
       userId: admin.id,
     },
   })
@@ -66,26 +66,24 @@ async function main() {
   const contact1 = await prisma.contact.create({
     data: {
       name: 'John Doe',
-      phone: '+1234567890',
-      email: 'john@example.com',
-      tags: 'VIP, Customer',
-      userId: user.id,
+      phoneNumber: '+1234567890',
+      label: 'VIP Customer',
+      userId: operator.id,
     },
   })
 
   const contact2 = await prisma.contact.create({
     data: {
       name: 'Jane Smith',
-      phone: '+0987654321',
-      email: 'jane@example.com',
-      tags: 'Lead',
-      userId: user.id,
+      phoneNumber: '+0987654321',
+      label: 'Lead',
+      userId: operator.id,
     },
   })
 
   console.log('Database seeded successfully!')
   console.log('Admin user: admin@whatsx.com / admin123')
-  console.log('Regular user: user@whatsx.com / user123')
+  console.log('Operator user: operator@whatsx.com / operator123')
 }
 
 main()

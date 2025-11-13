@@ -28,17 +28,58 @@ export async function GET() {
     // Transform the response to include creator_name
     const transformedTemplates = templates.map(template => ({
       id: template.id,
-      name: template.name,
+      title: template.title,
       content: template.content,
-      category: template.category,
-      isActive: template.isActive,
       createdAt: template.createdAt,
-      updatedAt: template.updatedAt,
       userId: template.userId,
       creator_name: template.user.name
     }))
 
     return createSuccessResponse(transformedTemplates)
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user?.role !== 'ADMIN') {
+      throw new AppError('Unauthorized - Admin access required', 401)
+    }
+
+    const { title, content } = await request.json()
+
+    if (!title || !content) {
+      throw new AppError('Title and content are required', 400)
+    }
+
+    const template = await db.template.create({
+      data: {
+        userId: session.user.id,
+        title,
+        content
+      },
+      include: {
+        user: {
+          select: {
+            name: true
+          }
+        }
+      }
+    })
+
+    const transformedTemplate = {
+      id: template.id,
+      title: template.title,
+      content: template.content,
+      createdAt: template.createdAt,
+      userId: template.userId,
+      creator_name: template.user.name
+    }
+
+    return createSuccessResponse(transformedTemplate, 201)
   } catch (error) {
     return handleApiError(error)
   }

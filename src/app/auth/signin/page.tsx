@@ -27,7 +27,8 @@ export default function SignIn() {
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
+        redirect: true,
+        callbackUrl: '/dashboard'
       })
 
       console.log('SIGNIN DEBUG: Sign in result:', result)
@@ -36,25 +37,8 @@ export default function SignIn() {
         console.error('SIGNIN DEBUG: Sign in error:', result.error)
         setError(`Authentication failed: ${result.error}`)
       } else {
-        console.log('SIGNIN DEBUG: Sign in successful, waiting for session...')
-        // Wait a moment for session to be established
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // Check session
-        const session = await getSession()
-        console.log('SIGNIN DEBUG: Session after delay:', session)
-        
-        if (session?.user?.role) {
-          console.log('SIGNIN DEBUG: User role found:', session.user.role)
-          router.push('/dashboard')
-          router.refresh()
-        } else {
-          console.error('SIGNIN DEBUG: No session or user role found after delay')
-          // Even if session is not immediately available, redirect to dashboard
-          // The dashboard layout will handle session validation
-          router.push('/dashboard')
-          router.refresh()
-        }
+        console.log('SIGNIN DEBUG: Sign in successful')
+        // NextAuth will handle the redirect automatically
       }
     } catch (error) {
       console.error('SIGNIN DEBUG: Sign in exception:', error)
@@ -116,11 +100,11 @@ export default function SignIn() {
             </p>
           </div>
           
-          <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+            <div className="mt-6 p-4 bg-gray-100 rounded-lg">
             <h3 className="font-semibold mb-2">Test Accounts:</h3>
             <div className="space-y-1 text-sm">
               <p><strong>Admin:</strong> admin@whatsx.com / admin123</p>
-              <p><strong>User:</strong> user@whatsx.com / user123</p>
+              <p><strong>Operator:</strong> operator@whatsx.com / operator123</p>
             </div>
           </div>
         </CardContent>

@@ -18,17 +18,17 @@ export async function GET() {
         userId: session.user.id
       },
       orderBy: {
-        createdAt: 'desc'
+        addedAt: 'desc'
       }
     })
 
     // Transform to match expected format
     const transformedContacts = contacts.map(contact => ({
       ...contact,
-      raw_phone: contact.phone,
-      e164_phone: contact.phone,
-      label: contact.tags || '',
-      added_at: contact.createdAt
+      raw_phone: contact.phoneNumber,
+      e164_phone: contact.phoneNumber,
+      label: contact.label || '',
+      added_at: contact.addedAt
     }))
 
     return createSuccessResponse(transformedContacts)
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const existingContact = await db.contact.findFirst({
       where: {
         userId: session.user.id,
-        phone: e164_phone
+        phoneNumber: e164_phone
       }
     })
 
@@ -77,19 +77,19 @@ export async function POST(request: NextRequest) {
     const contact = await db.contact.create({
       data: {
         userId: session.user.id,
-        name: name || null,
-        phone: raw_phone,
-        tags: label || null
+        name: name || '',
+        phoneNumber: raw_phone,
+        label: label || null
       }
     })
 
     // Transform to match expected format
     const transformedContact = {
       ...contact,
-      raw_phone: contact.phone,
-      e164_phone: contact.phone,
-      label: contact.tags || '',
-      added_at: contact.createdAt
+      raw_phone: contact.phoneNumber,
+      e164_phone: contact.phoneNumber,
+      label: contact.label || '',
+      added_at: contact.addedAt
     }
 
     return createSuccessResponse(transformedContact, 201)

@@ -6,11 +6,11 @@ export async function POST(request: NextRequest) {
   try {
     console.log('REGISTER DEBUG: Registration request received')
     
-    const { name, email, password, role } = await request.json()
+    const { name, email, password, role = 'OPERATOR' } = await request.json()
     
-    console.log('REGISTER DEBUG: Received data:', { name, email, role: role || 'END_USER' })
+    console.log('REGISTER DEBUG: Received data:', { name, email, role })
 
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password) {
       console.log('REGISTER DEBUG: Missing required fields')
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Hash password
     console.log('REGISTER DEBUG: Hashing password...')
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const passwordHash = await bcrypt.hash(password, 10)
     console.log('REGISTER DEBUG: Password hashed successfully')
 
     // Create user
@@ -43,8 +43,9 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
-        password: hashedPassword,
+        passwordHash,
         role,
+        status: 'ACTIVE'
       }
     })
 

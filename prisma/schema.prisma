@@ -15,84 +15,149 @@ datasource db {
 
 model User {
   id        String   @id @default(cuid())
+  name      String
   email     String   @unique
-  name      String?
-  password  String
-  role      String   @default("END_USER")
+  passwordHash String
+  role      UserRole @default(OPERATOR)
+  status    UserStatus @default(ACTIVE)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
   
   // Relations
-  templates   Template[]
-  contacts    Contact[]
-  messages    Message[]
-  campaigns   Campaign[]
-}
-
-model Template {
-  id          String   @id @default(cuid())
-  name        String
-  content     String
-  category    String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  messages    Message[]
+  templates       Template[]
+  contacts        Contact[]
+  messages        Message[]
+  broadcastLists  BroadcastList[]
 }
 
 model Contact {
   id          String   @id @default(cuid())
+  userId      String
   name        String
-  phone       String
-  email       String?
-  tags        String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  phoneNumber String
+  label       String?
+  addedAt     DateTime @default(now())
   
   // Relations
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  messages    Message[]
-  campaigns   Campaign[]
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveryLogs     DeliveryLog[]
+  broadcastContacts BroadcastContact[]
+  
+  // Unique constraint on (userId, phoneNumber)
+  @@unique([userId, phoneNumber])
 }
 
 model Message {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
+  userId      String
   content     String
-  status      String   @default("PENDING")
+  status      MessageStatus @default(DRAFT)
+  createdAt   DateTime     @default(now())
   scheduledAt DateTime?
-  sentAt      DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
   
   // Relations
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  contactId   String
-  contact     Contact  @relation(fields: [contactId], references: [id])
-  templateId  String?
-  template    Template? @relation(fields: [templateId], references: [id])
-  campaignId  String?
-  campaign    Campaign? @relation(fields: [campaignId], references: [id])
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaAttachments MediaAttachment[]
+  schedule        Schedule?
+  deliveryLogs    DeliveryLog[]
 }
 
-model Campaign {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  status      String   @default("DRAFT")
-  scheduledAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model MediaAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  fileUrl   String
+  fileType  String
+  sizeKb    Int
   
   // Relations
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  messages    Message[]
-  contacts    Contact[]
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model Schedule {
+  id         String        @id @default(cuid())
+  messageId  String        @unique
+  sendAt     DateTime
+  repeatType RepeatType   @default(NONE)
+  timezone   String
+  isActive   Boolean       @default(true)
+  
+  // Relations
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model Template {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BroadcastList {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  broadcastContacts BroadcastContact[]
+}
+
+model BroadcastContact {
+  broadcastListId String
+  contactId       String
+  
+  // Relations
+  broadcastList BroadcastList @relation(fields: [broadcastListId], references: [id], onDelete: Cascade)
+  contact       Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  @@id([broadcastListId, contactId])
+}
+
+model DeliveryLog {
+  id             String           @id @default(cuid())
+  messageId      String
+  contactId      String
+  status         DeliveryStatus    @default(SENT)
+  responseDetail String?
+  timestamp      DateTime         @default(now())
+  
+  // Relations
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum MessageStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  FAILED
+}
+
+enum RepeatType {
+  NONE
+  DAILY
+  WEEKLY
+  CUSTOM
+}
+
+enum DeliveryStatus {
+  SENT
+  DELIVERED
+  FAILED
 }

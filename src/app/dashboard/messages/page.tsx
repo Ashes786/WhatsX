@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { 
   MessageSquare, 
@@ -23,27 +24,43 @@ interface Template {
   id: string
   title: string
   content: string
-  is_active: boolean
+  creator_name: string
 }
 
 interface Message {
   id: string
   content: string
-  created_at: string
+  createdAt: string
   status: string
+  deliveryLogs: Array<{
+    contact: {
+      name: string
+      phoneNumber: string
+    }
+    status: string
+  }>
+}
+
+interface Contact {
+  id: string
+  name: string
+  phoneNumber: string
+  label: string
 }
 
 export default function MessagesPage() {
   const { data: session } = useSession()
   const [templates, setTemplates] = useState<Template[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const [messageContent, setMessageContent] = useState('')
-  const [recipient, setRecipient] = useState('')
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchTemplates()
+    fetchContacts()
     fetchMessages()
   }, [])
 
@@ -52,10 +69,22 @@ export default function MessagesPage() {
       const response = await fetch('/api/templates')
       if (response.ok) {
         const data = await response.json()
-        setTemplates(data.filter(t => t.is_active))
+        setTemplates(data)
       }
     } catch (error) {
       console.error('Failed to fetch templates:', error)
+    }
+  }
+
+  const fetchContacts = async () => {
+    try {
+      const response = await fetch('/api/contacts')
+      if (response.ok) {
+        const data = await response.json()
+        setContacts(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch contacts:', error)
     }
   }
 
@@ -74,8 +103,8 @@ export default function MessagesPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!messageContent.trim() || !recipient.trim()) {
-      alert('Please enter both message content and recipient')
+    if (!messageContent.trim() || selectedContacts.length === 0) {
+      alert('Please enter message content and select at least one contact')
       return
     }
 
@@ -87,14 +116,14 @@ export default function MessagesPage() {
         },
         body: JSON.stringify({
           content: messageContent,
-          recipient: recipient,
-          template_id: selectedTemplate || null
+          contactIds: selectedContacts,
+          templateId: selectedTemplate || null
         }),
       })
 
       if (response.ok) {
         setMessageContent('')
-        setRecipient('')
+        setSelectedContacts([])
         setSelectedTemplate('')
         await fetchMessages()
         alert('Message sent successfully!')
@@ -118,11 +147,13 @@ export default function MessagesPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'sent':
+      case 'SENT':
         return <Badge className="bg-green-100 text-green-800">Sent</Badge>
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
-      case 'failed':
+      case 'SCHEDULED':
+        return <Badge className="bg-yellow-100 text-yellow-800">Scheduled</Badge>
+      case 'DRAFT':
+        return <Badge className="bg-gray-100 text-gray-800">Draft</Badge>
+      case 'FAILED':
         return <Badge className="bg-red-100 text-red-800">Failed</Badge>
       default:
         return <Badge variant="secondary">Unknown</Badge>
@@ -179,7 +210,7 @@ export default function MessagesPage() {
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{messages.filter(m => m.status === 'sent').length}</p>
+                <p className="text-2xl font-bold text-gray-900">{messages.filter(m => m.status === 'SENT').length}</p>
                 <p className="text-sm text-gray-600">Messages Sent</p>
               </div>
             </div>
@@ -245,18 +276,40 @@ export default function MessagesPage() {
             </div>
 
             <div>
-              <Label htmlFor="recipient">Recipient Phone Number</Label>
-              <Input
-                id="recipient"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                placeholder="+1234567890"
-              />
+              <Label htmlFor="contacts">Select Contacts</Label>
+              <div className="max-h-40 overflow-y-auto border rounded-md p-3 space-y-2">
+                {contacts.length > 0 ? (
+                  contacts.map((contact) => (
+                    <div key={contact.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={contact.id}
+                        checked={selectedContacts.includes(contact.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedContacts([...selectedContacts, contact.id])
+                          } else {
+                            setSelectedContacts(selectedContacts.filter(id => id !== contact.id))
+                          }
+                        }}
+                      />
+                      <Label htmlFor={contact.id} className="text-sm font-medium cursor-pointer">
+                        {contact.name} ({contact.phoneNumber})
+                        {contact.label && <span className="text-gray-500 ml-1">- {contact.label}</span>}
+                      </Label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm">No contacts available. Add contacts first.</p>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedContacts.length} contact{selectedContacts.length !== 1 ? 's' : ''} selected
+              </p>
             </div>
 
             <Button 
               onClick={handleSendMessage}
-              disabled={!messageContent.trim() || !recipient.trim()}
+              disabled={!messageContent.trim() || selectedContacts.length === 0}
               className="w-full"
             >
               <Send className="h-4 w-4 mr-2" />
@@ -295,8 +348,11 @@ export default function MessagesPage() {
                       {message.content.length > 100 && '...'}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(message.created_at).toLocaleString()}
+                      {new Date(message.createdAt).toLocaleString()}
                     </p>
+                    <div className="mt-2 text-sm text-gray-600">
+                      Sent to {message.deliveryLogs.length} contact{message.deliveryLogs.length !== 1 ? 's' : ''}
+                    </div>
                   </div>
                 ))}
                 {messages.length > 5 && (

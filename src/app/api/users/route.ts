@@ -18,8 +18,8 @@ export async function GET() {
         email: true,
         name: true,
         role: true,
+        status: true,
         createdAt: true,
-        updatedAt: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { email, name, password, role = 'END_USER' } = await request.json()
+    const { email, name, password, role = 'OPERATOR' } = await request.json()
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
@@ -55,20 +55,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User already exists' }, { status: 400 })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const passwordHash = await bcrypt.hash(password, 12)
 
     const user = await db.user.create({
       data: {
         email,
         name,
-        password: hashedPassword,
+        passwordHash,
         role,
+        status: 'ACTIVE'
       },
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
+        status: true,
         createdAt: true,
       },
     })

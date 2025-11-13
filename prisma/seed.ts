@@ -4,167 +4,93 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('Seeding database...')
+  console.log('Start seeding...')
 
-  // Check if admin user already exists
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: 'admin@whatsx.com' }
+  // Create admin user
+  const adminPassword = await bcrypt.hash('admin123', 10)
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@whatsx.com' },
+    update: {},
+    create: {
+      name: 'Admin User',
+      email: 'admin@whatsx.com',
+      passwordHash: adminPassword,
+      role: 'ADMIN',
+      status: 'ACTIVE'
+    },
   })
 
-  if (!existingAdmin) {
-    // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 12)
-    const admin = await prisma.user.create({
-      data: {
-        name: 'Admin User',
-        email: 'admin@whatsx.com',
-        password: adminPassword,
-        role: 'ADMIN',
-      },
-    })
+  console.log('Created admin user:', admin)
 
-    // Create multiple sample templates for admin
-    const adminTemplates = [
-      {
-        name: 'Welcome Message',
-        content: 'Hello {{name}}, welcome to WhatsX! We are excited to have you on board.',
-      },
-      {
-        name: 'Promotional Offer',
-        content: 'Hi {{name}}, check out our latest offer! Get 20% off on all services this month.',
-      },
-      {
-        name: 'Meeting Reminder',
-        content: 'Dear {{name}}, this is a reminder about our meeting scheduled at {{time}} on {{date}}.',
-      },
-      {
-        name: 'Feedback Request',
-        content: 'Hi {{name}}, we value your feedback! Please take a moment to rate our service.',
-      }
-    ]
-
-    for (const template of adminTemplates) {
-      await prisma.template.create({
-        data: {
-          name: template.name,
-          content: template.content,
-          userId: admin.id,
-        },
-      })
-    }
-
-    console.log('Admin user created: admin@whatsx.com / admin123')
-    console.log(`${adminTemplates.length} templates created for admin`)
-  } else {
-    console.log('Admin user already exists')
-  }
-
-  // Check if end user already exists
-  const existingUser = await prisma.user.findUnique({
-    where: { email: 'user@whatsx.com' }
+  // Create a test operator user
+  const operatorPassword = await bcrypt.hash('operator123', 10)
+  const operator = await prisma.user.upsert({
+    where: { email: 'operator@whatsx.com' },
+    update: {},
+    create: {
+      name: 'Test Operator',
+      email: 'operator@whatsx.com',
+      passwordHash: operatorPassword,
+      role: 'OPERATOR',
+      status: 'ACTIVE'
+    },
   })
 
-  if (!existingUser) {
-    // Create sample end user
-    const endUserPassword = await bcrypt.hash('user123', 12)
-    const endUser = await prisma.user.create({
-      data: {
-        name: 'Regular User',
-        email: 'user@whatsx.com',
-        password: endUserPassword,
-        role: 'END_USER',
-      },
-    })
+  console.log('Created operator user:', operator)
 
-    // Create sample contacts for the end user
-    const contacts = [
-      { name: 'John Doe', phone: '+1234567890' },
-      { name: 'Jane Smith', phone: '+1987654321' },
-      { name: 'Bob Johnson', phone: '+1555555555' },
-      { name: 'Alice Brown', phone: '+1444444444' },
-      { name: 'Charlie Wilson', phone: '+1333333333' },
-      { name: 'Diana Davis', phone: '+1222222222' },
-    ]
-
-    for (const contact of contacts) {
-      await prisma.contact.create({
-        data: {
-          userId: endUser.id,
-          name: contact.name,
-          phone: contact.phone,
-        },
-      })
+  // Create sample templates
+  const template1 = await prisma.template.create({
+    data: {
+      userId: admin.id,
+      title: 'Welcome Message',
+      content: 'Hello {name}! Welcome to our service. We\'re excited to have you on board!'
     }
+  })
 
-    console.log('End user created: user@whatsx.com / user123')
-    console.log(`${contacts.length} contacts created for end user`)
-  } else {
-    console.log('End user already exists')
-  }
+  console.log('Created template:', template1)
 
-  // Create additional sample users for demonstration
-  const sampleUsers = [
-    {
-      name: 'Alice Johnson',
-      email: 'alice@example.com',
-      role: 'END_USER',
-    },
-    {
-      name: 'Bob Smith',
-      email: 'bob@example.com',
-      role: 'END_USER',
-    },
-    {
-      name: 'Carol Williams',
-      email: 'carol@example.com',
-      role: 'END_USER',
+  const template2 = await prisma.template.create({
+    data: {
+      userId: admin.id,
+      title: 'Promotional Offer',
+      content: 'Hi {name}! Check out our special offer: {offer}. Limited time only!'
     }
-  ]
+  })
 
-  for (const userData of sampleUsers) {
-    const existingUser = await prisma.user.findUnique({
-      where: { email: userData.email }
-    })
+  console.log('Created template:', template2)
 
-    if (!existingUser) {
-      const password = await bcrypt.hash('password123', 12)
-      const user = await prisma.user.create({
-        data: {
-          name: userData.name,
-          email: userData.email,
-          password: password,
-          role: userData.role,
-        }
-      })
-
-      // Create some contacts for additional users
-      const userContacts = [
-        { name: 'Contact 1', phone: '+1111111111' },
-        { name: 'Contact 2', phone: '+2222222222' },
-      ]
-
-      for (const contact of userContacts) {
-        await prisma.contact.create({
-          data: {
-            userId: user.id,
-            name: contact.name,
-            phone: contact.phone,
-          }
-        })
-      }
-
-      console.log(`Created user: ${userData.email} / password123`)
+  // Create sample contacts for operator
+  const contact1 = await prisma.contact.create({
+    data: {
+      userId: operator.id,
+      name: 'John Doe',
+      phoneNumber: '+1234567890',
+      label: 'VIP Customer'
     }
-  }
+  })
 
-  console.log('Database seeded successfully!')
+  console.log('Created contact:', contact1)
+
+  const contact2 = await prisma.contact.create({
+    data: {
+      userId: operator.id,
+      name: 'Jane Smith',
+      phoneNumber: '+0987654321',
+      label: 'Regular Customer'
+    }
+  })
+
+  console.log('Created contact:', contact2)
+
+  console.log('Seeding finished.')
 }
 
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect()
+  })
+  .catch(async (e) => {
+    console.error(e)
+    await prisma.$disconnect()
+    process.exit(1)
   })

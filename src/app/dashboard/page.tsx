@@ -77,28 +77,28 @@ export default function DashboardPage() {
         setStats(prev => ({ ...prev, templates: templates.length }))
       }
 
-      // Fetch recent prepare jobs from API
-      const prepareResponse = await fetch('/api/prepare-to-send')
-      if (prepareResponse.ok) {
-        const prepareJobs = await prepareResponse.json()
-        setStats(prev => ({ ...prev, recentJobs: prepareJobs.length }))
+      // Fetch recent messages from API
+      const messagesResponse = await fetch('/api/messages')
+      if (messagesResponse.ok) {
+        const messages = await messagesResponse.json()
+        setStats(prev => ({ ...prev, recentJobs: messages.length }))
         
-        // Convert prepare jobs to activity items
-        const jobActivities = prepareJobs.slice(0, 3).map((job: PrepareJob, index: number) => ({
-          id: job.id,
-          type: 'message_prepared',
-          title: `Message prepared for ${job.recipients_final.length} recipients`,
-          description: job.message_preview.substring(0, 50) + (job.message_preview.length > 50 ? '...' : ''),
+        // Convert messages to activity items
+        const messageActivities = messages.slice(0, 3).map((message: any, index: number) => ({
+          id: message.id,
+          type: 'message_sent',
+          title: `Message ${message.status}`,
+          description: message.content.substring(0, 50) + (message.content.length > 50 ? '...' : ''),
           time: index === 0 ? 'Just now' : index === 1 ? '1 hour ago' : '2 hours ago',
           icon: Send,
           color: 'text-purple-600'
         }))
-        setRecentActivity(jobActivities)
+        setRecentActivity(messageActivities)
       }
 
       // Fetch active users if admin
       if (userRole === 'ADMIN') {
-        const usersResponse = await fetch('/api/admin/users')
+        const usersResponse = await fetch('/api/users')
         if (usersResponse.ok) {
           const users = await usersResponse.json()
           const activeUsers = users.filter((user: any) => user.status === 'ACTIVE').length
@@ -135,8 +135,8 @@ export default function DashboardPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'message_prepared':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800">Prepared</Badge>
+      case 'message_sent':
+        return <Badge variant="default" className="bg-blue-100 text-blue-800">Sent</Badge>
       default:
         return <Badge variant="secondary">Pending</Badge>
     }
@@ -235,13 +235,13 @@ export default function DashboardPage() {
 
         <Card className="border-l-4 border-l-orange-500 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Messages Prepared</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Messages Sent</CardTitle>
             <Send className="h-5 w-5 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-orange-600">{stats.recentJobs}</div>
             <p className="text-xs text-gray-500 mt-1">
-              Total prepared messages
+              Total messages sent
             </p>
             <div className="mt-3 flex items-center">
               <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
@@ -281,11 +281,11 @@ export default function DashboardPage() {
                     <Button 
                       variant="outline" 
                       size="lg" 
-                      onClick={() => window.location.href = '/dashboard/prepare'}
+                      onClick={() => window.location.href = '/dashboard/messages'}
                       className="flex items-center gap-3 h-12"
                     >
                       <Send className="h-5 w-5" />
-                      Create Campaign
+                      Send Messages
                     </Button>
                   </div>
                 </div>
