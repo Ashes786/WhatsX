@@ -36,6 +36,35 @@ export default function TemplatesPage() {
   const { data: session } = useSession()
   const userRole = session?.user?.role
   
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
+  const [newTemplate, setNewTemplate] = useState({
+    title: '',
+    content: '',
+    is_active: true
+  })
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await fetch('/api/admin/templates')
+      if (response.ok) {
+        const data = await response.json()
+        setTemplates(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch templates:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchTemplates()
+  }, [])
+  
   // Show access denied for non-admin users
   if (userRole !== 'ADMIN') {
     return (
@@ -54,35 +83,6 @@ export default function TemplatesPage() {
         </div>
       </div>
     )
-  }
-
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
-  const [newTemplate, setNewTemplate] = useState({
-    title: '',
-    content: '',
-    is_active: true
-  })
-
-  useEffect(() => {
-    fetchTemplates()
-  }, [])
-
-  const fetchTemplates = async () => {
-    try {
-      const response = await fetch('/api/admin/templates')
-      if (response.ok) {
-        const data = await response.json()
-        setTemplates(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch templates:', error)
-    } finally {
-      setLoading(false)
-    }
   }
 
   const handleAddTemplate = async () => {

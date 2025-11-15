@@ -63,8 +63,15 @@ async function main() {
   })
 
   // Create some sample contacts
-  const contact1 = await prisma.contact.create({
-    data: {
+  const contact1 = await prisma.contact.upsert({
+    where: {
+      userId_phoneNumber: {
+        userId: endUser.id,
+        phoneNumber: '+1234567890'
+      }
+    },
+    update: {},
+    create: {
       name: 'John Doe',
       phoneNumber: '+1234567890',
       label: 'VIP Customer',
@@ -72,8 +79,15 @@ async function main() {
     },
   })
 
-  const contact2 = await prisma.contact.create({
-    data: {
+  const contact2 = await prisma.contact.upsert({
+    where: {
+      userId_phoneNumber: {
+        userId: endUser.id,
+        phoneNumber: '+0987654321'
+      }
+    },
+    update: {},
+    create: {
       name: 'Jane Smith',
       phoneNumber: '+0987654321',
       label: 'Lead',

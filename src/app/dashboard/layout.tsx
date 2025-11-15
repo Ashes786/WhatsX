@@ -65,6 +65,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -90,6 +91,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleSidebar = () => {
     if (isMobile) {
       setIsMobileMenuOpen(!isMobileMenuOpen)
+    } else {
+      setIsDesktopSidebarCollapsed(!isDesktopSidebarCollapsed)
     }
   }
 
@@ -139,8 +142,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Desktop Sidebar */}
         <div className="hidden lg:flex h-screen">
           <Sidebar 
-            collapsible={!isMobile} 
+            collapsible={true} 
             className="transition-all duration-300 bg-white border-r border-gray-200"
+            state={isDesktopSidebarCollapsed ? "collapsed" : "expanded"}
+            onStateChange={(state) => setIsDesktopSidebarCollapsed(state === "collapsed")}
           >
             <SidebarHeader className="p-4 border-b border-gray-200">
               <div className="flex items-center space-x-2 min-w-0">
@@ -272,9 +277,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Desktop Header */}
             <div className="hidden lg:block bg-white border-b border-gray-200 px-4 py-2">
               <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-lg font-bold text-gray-900">Dashboard</h1>
-                  <p className="text-xs text-gray-600 mt-1">Welcome back, {session?.user?.name || 'Loading...'}</p>
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleSidebar}
+                    className="p-2"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <h1 className="text-lg font-bold text-gray-900">Dashboard</h1>
+                    <p className="text-xs text-gray-600 mt-1">Welcome back, {session?.user?.name || 'Loading...'}</p>
+                  </div>
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">

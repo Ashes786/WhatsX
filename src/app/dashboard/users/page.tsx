@@ -16,7 +16,8 @@ import {
   ToggleRight,
   Edit,
   Mail,
-  Calendar
+  Calendar,
+  User
 } from 'lucide-react'
 
 interface User {
@@ -32,6 +33,14 @@ interface User {
 export default function UsersPage() {
   const { data: session } = useSession()
   const userRole = session?.user?.role
+  
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
   
   // Show access denied for non-admin users
   if (userRole !== 'ADMIN') {
@@ -52,14 +61,6 @@ export default function UsersPage() {
       </div>
     )
   }
-
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-
-  useEffect(() => {
-    fetchUsers()
-  }, [])
 
   const fetchUsers = async () => {
     try {
