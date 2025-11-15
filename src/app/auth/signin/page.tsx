@@ -104,7 +104,7 @@ export default function SignIn() {
             <h3 className="font-semibold mb-2">Test Accounts:</h3>
             <div className="space-y-1 text-sm">
               <p><strong>Admin:</strong> admin@whatsx.com / admin123</p>
-              <p><strong>Operator:</strong> operator@whatsx.com / operator123</p>
+              <p><strong>End User:</strong> operator@whatsx.com / operator123</p>
             </div>
           </div>
         </CardContent>

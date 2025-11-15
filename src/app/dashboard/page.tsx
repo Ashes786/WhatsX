@@ -281,7 +281,7 @@ export default function DashboardPage() {
                     <Button 
                       variant="outline" 
                       size="lg" 
-                      onClick={() => window.location.href = '/dashboard/messages'}
+                      onClick={() => window.location.href = '/dashboard/bulk-messaging'}
                       className="flex items-center gap-3 h-12"
                     >
                       <Send className="h-5 w-5" />

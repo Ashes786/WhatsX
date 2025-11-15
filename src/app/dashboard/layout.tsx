@@ -14,7 +14,8 @@ import {
   X,
   Contact,
   MessageSquare,
-  Send
+  Send,
+  Target
 } from 'lucide-react'
 
 interface DashboardLayoutProps {
@@ -34,15 +35,15 @@ const menuItems = [
     userOnly: true,
   },
   {
-    title: 'Messages',
-    url: '/dashboard/messages',
-    icon: MessageSquare,
+    title: 'Bulk Messaging',
+    url: '/dashboard/bulk-messaging',
+    icon: Send,
     userOnly: true,
   },
   {
-    title: 'Campaigns',
-    url: '/dashboard/prepare',
-    icon: Send,
+    title: 'Message Logs',
+    url: '/dashboard/message-logs',
+    icon: MessageSquare,
     userOnly: true,
   },
   {

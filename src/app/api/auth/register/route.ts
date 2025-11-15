@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('REGISTER DEBUG: Registration request received')
     
-    const { name, email, password, role = 'OPERATOR' } = await request.json()
+    const { name, email, password, role = 'END_USER' } = await request.json()
     
     console.log('REGISTER DEBUG: Received data:', { name, email, role })
 

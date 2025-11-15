@@ -1,6 +1,6 @@
 import { Queue, Worker } from 'bullmq'
 import { db } from '@/lib/db'
-import ZAI from 'z-ai-web-dev-sdk'
+import WhatsAppCloudAPI from '@/lib/whatsapp'
 
 // Create a message queue
 export const messageQueue = new Queue('message-queue', {
@@ -10,24 +10,35 @@ export const messageQueue = new Queue('message-queue', {
   },
 })
 
-// WhatsApp Service placeholder
+// WhatsApp Service using the new Cloud API
 class WhatsAppService {
-  static async sendMessage(phoneNumber: string, message: string): Promise<{ success: boolean; error?: string }> {
+  static async sendMessage(phoneNumber: string, message: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      // This is where you would integrate with the actual WhatsApp Cloud API
-      // For now, we'll simulate the API call
-      
-      console.log(`Sending WhatsApp message to ${phoneNumber}: ${message}`)
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Simulate success (in real implementation, this would call WhatsApp API)
-      return { success: true }
-      
+      const result = await WhatsAppCloudAPI.sendMessage(phoneNumber, message)
+      return result
     } catch (error) {
-      console.error('WhatsApp API error:', error)
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+      console.error('WhatsApp Service error:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      }
+    }
+  }
+
+  static async sendTemplateMessage(
+    phoneNumber: string, 
+    templateName: string, 
+    parameters?: Array<{ type: string; text?: string }>
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      const result = await WhatsAppCloudAPI.sendTemplateMessage(phoneNumber, templateName, 'en', parameters)
+      return result
+    } catch (error) {
+      console.error('WhatsApp Template Service error:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      }
     }
   }
 }
@@ -68,7 +79,7 @@ const messageWorker = new Worker(
             where: { id: deliveryLog.id },
             data: {
               status: result.success ? 'DELIVERED' : 'FAILED',
-              responseDetail: result.error || null
+              responseDetail: result.error || (result.messageId ? `Message ID: ${result.messageId}` : null)
             }
           })
           

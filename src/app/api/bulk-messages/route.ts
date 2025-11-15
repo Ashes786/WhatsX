@@ -5,39 +5,6 @@ import { db } from '@/lib/db'
 import { v4 as uuidv4 } from 'uuid'
 import { MessageScheduler } from '@/lib/scheduler'
 
-export async function GET() {
-  try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const messages = await db.message.findMany({
-      where: {
-        userId: session.user.id
-      },
-      include: {
-        deliveryLogs: {
-          include: {
-            contact: true
-          }
-        },
-        mediaAttachments: true,
-        schedule: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
-
-    return NextResponse.json(messages)
-  } catch (error) {
-    console.error('Error fetching messages:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -46,33 +13,88 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { content, contactIds, scheduledAt, mediaAttachments } = await request.json()
+    const { 
+      content, 
+      contactIds, 
+      broadcastListId, 
+      scheduledAt, 
+      mediaAttachments,
+      templateId,
+      templateVariables 
+    } = await request.json()
 
-    if (!content || !contactIds || !Array.isArray(contactIds) || contactIds.length === 0) {
-      return NextResponse.json({ error: 'Content and at least one contact are required' }, { status: 400 })
+    if (!content || (!contactIds && !broadcastListId)) {
+      return NextResponse.json({ 
+        error: 'Content and either contactIds or broadcastListId are required' 
+      }, { status: 400 })
     }
 
-    // Get unique contacts and remove duplicates
-    const uniqueContactIds = [...new Set(contactIds)]
-    
+    let finalContactIds: string[] = []
+
+    // Handle direct contact selection
+    if (contactIds && Array.isArray(contactIds)) {
+      finalContactIds = [...new Set(contactIds)] // Remove duplicates
+    }
+
+    // Handle broadcast list selection
+    if (broadcastListId) {
+      const broadcastList = await db.broadcastList.findUnique({
+        where: { id: broadcastListId },
+        include: {
+          broadcastContacts: {
+            include: {
+              contact: true
+            }
+          }
+        }
+      })
+
+      if (!broadcastList || broadcastList.userId !== session.user.id) {
+        return NextResponse.json({ error: 'Broadcast list not found or access denied' }, { status: 404 })
+      }
+
+      const broadcastContactIds = broadcastList.broadcastContacts.map(bc => bc.contact.id)
+      finalContactIds = [...new Set([...finalContactIds, ...broadcastContactIds])] // Merge and remove duplicates
+    }
+
+    if (finalContactIds.length === 0) {
+      return NextResponse.json({ error: 'No contacts selected' }, { status: 400 })
+    }
+
     // Verify all contacts belong to current user
     const contacts = await db.contact.findMany({
       where: {
         id: {
-          in: uniqueContactIds,
+          in: finalContactIds,
         },
         userId: session.user.id,
       },
     })
 
-    if (contacts.length !== uniqueContactIds.length) {
+    if (contacts.length !== finalContactIds.length) {
       return NextResponse.json({ error: 'Some contacts not found or access denied' }, { status: 404 })
+    }
+
+    // Process template if provided
+    let finalContent = content
+    if (templateId && templateVariables) {
+      const template = await db.template.findUnique({
+        where: { id: templateId }
+      })
+
+      if (template) {
+        finalContent = template.content
+        // Replace template variables
+        Object.entries(templateVariables).forEach(([key, value]) => {
+          finalContent = finalContent.replace(new RegExp(`{${key}}`, 'g'), String(value))
+        })
+      }
     }
 
     // Create message
     const messageData: any = {
       userId: session.user.id,
-      content,
+      content: finalContent,
       status: scheduledAt ? 'SCHEDULED' : 'SENT'
     }
 
@@ -158,9 +180,12 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(completeMessage, { status: 201 })
+    return NextResponse.json({
+      ...completeMessage,
+      duplicateContactsRemoved: finalContactIds.length - contacts.length
+    }, { status: 201 })
   } catch (error) {
-    console.error('Error creating message:', error)
+    console.error('Error creating bulk message:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

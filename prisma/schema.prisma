@@ -18,7 +18,7 @@ model User {
   name      String
   email     String   @unique
   passwordHash String
-  role      UserRole @default(OPERATOR)
+  role      UserRole @default(END_USER)
   status    UserStatus @default(ACTIVE)
   createdAt DateTime @default(now())
   
@@ -133,8 +133,7 @@ model DeliveryLog {
 // Enums
 enum UserRole {
   ADMIN
-  OPERATOR
-  VIEWER
+  END_USER
 }
 
 enum UserStatus {

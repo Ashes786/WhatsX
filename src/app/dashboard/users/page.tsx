@@ -31,6 +31,28 @@ interface User {
 
 export default function UsersPage() {
   const { data: session } = useSession()
+  const userRole = session?.user?.role
+  
+  // Show access denied for non-admin users
+  if (userRole !== 'ADMIN') {
+    return (
+      <div className="p-6">
+        <div className="text-center py-16">
+          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <Users className="h-8 w-8 text-red-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-6">
+            You don't have permission to access user management.
+          </p>
+          <p className="text-sm text-gray-500">
+            Only administrators can manage users. Please contact your admin if you need user changes.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
