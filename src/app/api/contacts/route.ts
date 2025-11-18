@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/session-utils'
 import { db } from '@/lib/db'
 import { createContactSchema, validatePhoneNumber, handleApiError, createSuccessResponse, AppError } from '@/lib/validation'
 import { normalizePhoneNumber } from '@/lib/phone-utils'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      throw new AppError('Unauthorized - Please login again', 401)
-    }
+    const currentUser = await getCurrentUser()
+    console.log('Contacts GET - Current user:', currentUser)
 
     const contacts = await db.contact.findMany({
       where: {
-        userId: session.user.id
+        userId: currentUser.id
       },
       orderBy: {
         addedAt: 'desc'
@@ -40,11 +36,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      throw new AppError('Unauthorized - Please login again', 401)
-    }
+    const currentUser = await getCurrentUser()
+    console.log('Contacts POST - Current user:', currentUser)
 
     const body = await request.json()
     
@@ -64,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Check if contact with same phone already exists
     const existingContact = await db.contact.findFirst({
       where: {
-        userId: session.user.id,
+        userId: currentUser.id,
         phoneNumber: e164_phone
       }
     })
@@ -76,7 +69,7 @@ export async function POST(request: NextRequest) {
     // Create contact
     const contact = await db.contact.create({
       data: {
-        userId: session.user.id,
+        userId: currentUser.id,
         name: name || '',
         phoneNumber: raw_phone,
         label: label || null

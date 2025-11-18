@@ -52,7 +52,11 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, session, trigger }) {
+      console.log('JWT callback - trigger:', trigger)
+      console.log('JWT callback - user:', user)
+      console.log('JWT callback - session:', session)
+      
       if (user) {
         token.role = user.role
         token.id = user.id
@@ -61,11 +65,16 @@ export const authOptions: NextAuthOptions = {
       console.log('JWT callback - token:', token)
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token, user, trigger, newSession, isNewUser }) {
+      console.log('Session callback - trigger:', trigger)
+      console.log('Session callback - token:', token)
+      console.log('Session callback - user:', user)
+      
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
         console.log('Session created with token:', token)
+        console.log('Session created with user ID:', token.id, 'Role:', token.role)
       }
       console.log('Session callback - session:', session)
       return session

@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/session-utils'
 import { db } from '@/lib/db'
 import { v4 as uuidv4 } from 'uuid'
 import { MessageScheduler } from '@/lib/scheduler'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const currentUser = await getCurrentUser()
+    console.log('Messages GET - Current user:', currentUser)
 
     const messages = await db.message.findMany({
       where: {
-        userId: session.user.id
+        userId: currentUser.id
       },
       include: {
         deliveryLogs: {
@@ -40,11 +36,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const currentUser = await getCurrentUser()
+    console.log('Messages POST - Current user:', currentUser)
 
     const { content, contactIds, scheduledAt, mediaAttachments } = await request.json()
 
@@ -61,7 +54,7 @@ export async function POST(request: NextRequest) {
         id: {
           in: uniqueContactIds,
         },
-        userId: session.user.id,
+        userId: currentUser.id,
       },
     })
 
@@ -71,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     // Create message
     const messageData: any = {
-      userId: session.user.id,
+      userId: currentUser.id,
       content,
       status: scheduledAt ? 'SCHEDULED' : 'SENT'
     }
@@ -118,7 +111,7 @@ export async function POST(request: NextRequest) {
       const scheduleResult = await MessageScheduler.scheduleMessage(
         message.id,
         contacts.map(c => c.id),
-        session.user.id,
+        currentUser.id,
         new Date(scheduledAt)
       )
 

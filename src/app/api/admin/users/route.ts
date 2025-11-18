@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireAdmin } from '@/lib/session-utils'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { createUserSchema, handleApiError, createSuccessResponse, AppError } from '@/lib/validation'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || session.user.role !== 'ADMIN') {
-      throw new AppError('Unauthorized', 401)
-    }
+    const adminUser = await requireAdmin()
+    console.log('Admin Users GET - Current admin user:', adminUser)
 
     const users = await db.user.findMany({
       select: {
@@ -43,11 +39,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || session.user.role !== 'ADMIN') {
-      throw new AppError('Unauthorized', 401)
-    }
+    const adminUser = await requireAdmin()
+    console.log('Admin Users POST - Current admin user:', adminUser)
 
     const body = await request.json()
     
@@ -85,6 +78,9 @@ export async function POST(request: NextRequest) {
         createdAt: true
       }
     })
+
+    console.log('Admin Users POST - Created user:', user)
+    console.log('Admin Users POST - Current admin user still:', adminUser)
 
     // Transform to match expected format
     const transformedUser = {
