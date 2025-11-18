@@ -11,23 +11,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get all templates (admin can see all templates for management purposes)
     const templates = await db.template.findMany({
-      include: {
-        creator: {
-          select: {
-            name: true
-          }
-        }
-      },
       orderBy: {
         created_at: 'desc'
       }
     })
 
-    const transformedTemplates = templates.map(template => ({
-      ...template,
-      creator_name: template.creator.name
-    }))
+    // Get creator information for each template
+    const transformedTemplates = await Promise.all(
+      templates.map(async (template) => {
+        const creator = await db.user.findUnique({
+          where: { id: template.created_by },
+          select: { name: true, role: true }
+        })
+        
+        return {
+          ...template,
+          creator_name: creator?.name || 'Unknown',
+          is_admin_template: creator?.role === 'ADMIN'
+        }
+      })
+    )
 
     return NextResponse.json(transformedTemplates)
   } catch (error) {
@@ -66,19 +71,19 @@ export async function POST(request: NextRequest) {
         content,
         created_by: session.user.id,
         is_active: is_active ?? true
-      },
-      include: {
-        creator: {
-          select: {
-            name: true
-          }
-        }
       }
+    })
+
+    // Get creator information
+    const creator = await db.user.findUnique({
+      where: { id: template.created_by },
+      select: { name: true, role: true }
     })
 
     const transformedTemplate = {
       ...template,
-      creator_name: template.creator.name
+      creator_name: creator?.name || 'Unknown',
+      is_admin_template: creator?.role === 'ADMIN'
     }
 
     return NextResponse.json(transformedTemplate, { status: 201 })

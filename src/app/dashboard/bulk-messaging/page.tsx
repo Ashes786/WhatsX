@@ -32,6 +32,8 @@ interface Template {
   title: string
   content: string
   creator_name: string
+  is_admin_template: boolean
+  created_at: string
 }
 
 interface Contact {
@@ -79,6 +81,14 @@ export default function BulkMessagingPage() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [activeTab, setActiveTab] = useState('compose')
+  
+  // Template creation dialog state
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
+  const [templateForm, setTemplateForm] = useState({
+    title: '',
+    content: ''
+  })
+  const [creatingTemplate, setCreatingTemplate] = useState(false)
 
   useEffect(() => {
     fetchTemplates()
@@ -191,6 +201,36 @@ export default function BulkMessagingPage() {
     const template = templates.find(t => t.id === templateId)
     if (template) {
       setMessageContent(template.content)
+    }
+  }
+
+  const handleCreateTemplate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCreatingTemplate(true)
+    
+    try {
+      const response = await fetch('/api/templates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(templateForm),
+      })
+
+      if (response.ok) {
+        await fetchTemplates()
+        setIsTemplateDialogOpen(false)
+        setTemplateForm({ title: '', content: '' })
+        alert('Template created successfully!')
+      } else {
+        const error = await response.json()
+        alert(`Failed to create template: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to create template:', error)
+      alert('Failed to create template. Please try again.')
+    } finally {
+      setCreatingTemplate(false)
     }
   }
 
@@ -328,7 +368,21 @@ export default function BulkMessagingPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="template">Template (Optional)</Label>
+                  <div className="flex justify-between items-center mb-2">
+                    <Label htmlFor="template">Template (Optional)</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setIsTemplateDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Create Template
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Public templates (created by admins) are visible to all users. Your templates are private.
+                  </p>
                   <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a template" />
@@ -336,7 +390,19 @@ export default function BulkMessagingPage() {
                     <SelectContent>
                       {templates.map((template) => (
                         <SelectItem key={template.id} value={template.id}>
-                          {template.title}
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span>{template.title}</span>
+                              {template.is_admin_template && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Public
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {template.is_admin_template ? `Admin • ${template.creator_name}` : `Your template`}
+                            </span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -573,6 +639,68 @@ export default function BulkMessagingPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Template Creation Dialog */}
+      <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create New Template</DialogTitle>
+            <DialogDescription>
+              Create a reusable message template. Your templates will be private and only visible to you.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateTemplate} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="template-title">Template Title</Label>
+              <Input
+                id="template-title"
+                type="text"
+                value={templateForm.title}
+                onChange={(e) => setTemplateForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter template title"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="template-content">Template Content</Label>
+              <Textarea
+                id="template-content"
+                value={templateForm.content}
+                onChange={(e) => setTemplateForm(prev => ({ ...prev, content: e.target.value }))}
+                rows={6}
+                placeholder="Enter your message template here... Use {name} for personalization"
+                required
+              />
+              <p className="text-sm text-gray-500">
+                Use {'{name}'} for personalization. This template will be available for future messages.
+              </p>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsTemplateDialogOpen(false)}
+                disabled={creatingTemplate}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creatingTemplate}>
+                {creatingTemplate ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Create Template
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

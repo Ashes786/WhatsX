@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
   Users, 
   UserPlus, 
@@ -17,7 +20,10 @@ import {
   Edit,
   Mail,
   Calendar,
-  User
+  User,
+  X,
+  Save,
+  Trash2
 } from 'lucide-react'
 
 interface User {
@@ -37,6 +43,29 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  
+  // Dialog states
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  
+  // Form states
+  const [addFormData, setAddFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'END_USER' as 'ADMIN' | 'END_USER'
+  })
+  
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    role: 'END_USER' as 'ADMIN' | 'END_USER',
+    status: 'ACTIVE' as 'ACTIVE' | 'SUSPENDED'
+  })
+  
+  const [formLoading, setFormLoading] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -99,6 +128,113 @@ export default function UsersPage() {
     }
   }
 
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormLoading(true)
+    
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(addFormData),
+      })
+
+      if (response.ok) {
+        await fetchUsers()
+        setIsAddDialogOpen(false)
+        setAddFormData({
+          name: '',
+          email: '',
+          password: '',
+          role: 'END_USER'
+        })
+      } else {
+        const error = await response.json()
+        alert(`Failed to add user: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to add user:', error)
+      alert('Failed to add user. Please try again.')
+    } finally {
+      setFormLoading(false)
+    }
+  }
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedUser) return
+    
+    setFormLoading(true)
+    
+    try {
+      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editFormData),
+      })
+
+      if (response.ok) {
+        await fetchUsers()
+        setIsEditDialogOpen(false)
+        setSelectedUser(null)
+      } else {
+        const error = await response.json()
+        alert(`Failed to update user: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to update user:', error)
+      alert('Failed to update user. Please try again.')
+    } finally {
+      setFormLoading(false)
+    }
+  }
+
+  const openEditDialog = (user: User) => {
+    setSelectedUser(user)
+    setEditFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const openDeleteDialog = (user: User) => {
+    setUserToDelete(user)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return
+    
+    setFormLoading(true)
+    
+    try {
+      const response = await fetch(`/api/admin/users/${userToDelete.id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        await fetchUsers()
+        setIsDeleteDialogOpen(false)
+        setUserToDelete(null)
+      } else {
+        const error = await response.json()
+        alert(`Failed to delete user: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete user:', error)
+      alert('Failed to delete user. Please try again.')
+    } finally {
+      setFormLoading(false)
+    }
+  }
+
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'ADMIN':
@@ -142,11 +278,215 @@ export default function UsersPage() {
             Manage all users and their access permissions
           </p>
         </div>
-        <Button className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4" />
-          Add User
-        </Button>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogTrigger asChild>
+          <Button className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4" />
+            Add User
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Create a new user account with specified role and permissions.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddUser} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                type="text"
+                value={addFormData.name}
+                onChange={(e) => setAddFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter user name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={addFormData.email}
+                onChange={(e) => setAddFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Enter email address"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={addFormData.password}
+                onChange={(e) => setAddFormData(prev => ({ ...prev, password: e.target.value }))}
+                placeholder="Enter password (min 6 characters)"
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={addFormData.role} onValueChange={(value: 'ADMIN' | 'END_USER') => setAddFormData(prev => ({ ...prev, role: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="END_USER">End User</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={formLoading}>
+                {formLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Add User
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
       </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user information and permissions.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditUser} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                type="text"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter user name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editFormData.email}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Enter email address"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Role</Label>
+              <Select value={editFormData.role} onValueChange={(value: 'ADMIN' | 'END_USER') => setEditFormData(prev => ({ ...prev, role: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="END_USER">End User</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-status">Status</Label>
+              <Select value={editFormData.status} onValueChange={(value: 'ACTIVE' | 'SUSPENDED') => setEditFormData(prev => ({ ...prev, status: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={formLoading}>
+                {formLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Update User
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this user? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {userToDelete && (
+              <div className="space-y-2">
+                <p><strong>Name:</strong> {userToDelete.name}</p>
+                <p><strong>Email:</strong> {userToDelete.email}</p>
+                <p><strong>Role:</strong> {userToDelete.role}</p>
+                <p><strong>Status:</strong> {userToDelete.status}</p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={formLoading}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              variant="destructive" 
+              onClick={handleDeleteUser}
+              disabled={formLoading}
+            >
+              {formLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete User
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -272,8 +612,17 @@ export default function UsersPage() {
                             <ToggleRight className="h-4 w-4 text-green-600" />
                           )}
                         </Button>
-                        <Button variant="ghost" size="sm" title="Edit User">
+                        <Button variant="ghost" size="sm" title="Edit User" onClick={() => openEditDialog(user)}>
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          title="Delete User" 
+                          onClick={() => openDeleteDialog(user)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>

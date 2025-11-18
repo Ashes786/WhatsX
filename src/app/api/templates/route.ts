@@ -12,28 +12,48 @@ export async function GET() {
       throw new AppError('Unauthorized', 401)
     }
 
+    // Get admin user IDs
+    const adminUsers = await db.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true }
+    })
+    
+    const adminIds = adminUsers.map(admin => admin.id)
+
+    // Get templates based on user role:
+    // 1. If user is admin: show all admin templates (public) + their own templates (which are already included in admin templates)
+    // 2. If user is not admin: show all admin templates (public) + their own templates (private)
     const templates = await db.template.findMany({
-      include: {
-        user: {
-          select: {
-            name: true
-          }
-        }
+      where: {
+        OR: [
+          { created_by: { in: adminIds } }, // All admin templates (public to all users)
+          ...(adminIds.includes(session.user.id) ? [] : [{ created_by: session.user.id }]) // User's own templates only if not admin
+        ]
       },
       orderBy: {
-        createdAt: 'desc'
+        created_at: 'desc'
       }
     })
 
-    // Transform the response to include creator_name
-    const transformedTemplates = templates.map(template => ({
-      id: template.id,
-      title: template.title,
-      content: template.content,
-      createdAt: template.createdAt,
-      userId: template.userId,
-      creator_name: template.user.name
-    }))
+    // Get creator information for each template
+    const transformedTemplates = await Promise.all(
+      templates.map(async (template) => {
+        const creator = await db.user.findUnique({
+          where: { id: template.created_by },
+          select: { name: true, role: true }
+        })
+        
+        return {
+          id: template.id,
+          title: template.title,
+          content: template.content,
+          created_at: template.created_at,
+          created_by: template.created_by,
+          creator_name: creator?.name || 'Unknown',
+          is_admin_template: creator?.role === 'ADMIN'
+        }
+      })
+    )
 
     return createSuccessResponse(transformedTemplates)
   } catch (error) {
@@ -45,8 +65,8 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user?.role !== 'ADMIN') {
-      throw new AppError('Unauthorized - Admin access required', 401)
+    if (!session) {
+      throw new AppError('Unauthorized', 401)
     }
 
     const { title, content } = await request.json()
@@ -57,26 +77,27 @@ export async function POST(request: NextRequest) {
 
     const template = await db.template.create({
       data: {
-        userId: session.user.id,
+        created_by: session.user.id,
         title,
-        content
-      },
-      include: {
-        user: {
-          select: {
-            name: true
-          }
-        }
+        content,
+        is_active: true
       }
+    })
+
+    // Get creator information
+    const creator = await db.user.findUnique({
+      where: { id: template.created_by },
+      select: { name: true, role: true }
     })
 
     const transformedTemplate = {
       id: template.id,
       title: template.title,
       content: template.content,
-      createdAt: template.createdAt,
-      userId: template.userId,
-      creator_name: template.user.name
+      created_at: template.created_at,
+      created_by: template.created_by,
+      creator_name: creator?.name || 'Unknown',
+      is_admin_template: creator?.role === 'ADMIN'
     }
 
     return createSuccessResponse(transformedTemplate, 201)

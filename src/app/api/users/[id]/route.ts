@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 
@@ -25,7 +25,7 @@ export async function PUT(
     }
 
     if (password) {
-      updateData.password = await bcrypt.hash(password, 12)
+      updateData.passwordHash = await bcrypt.hash(password, 12)
     }
 
     const user = await db.user.update({

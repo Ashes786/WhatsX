@@ -30,6 +30,7 @@ interface Template {
   is_active: boolean
   created_at: string
   creator_name?: string
+  is_admin_template?: boolean
 }
 
 export default function TemplatesPage() {
@@ -206,7 +207,7 @@ export default function TemplatesPage() {
             <DialogHeader>
               <DialogTitle>Add New Template</DialogTitle>
               <DialogDescription>
-                Create a new message template that users can use for their campaigns
+                Create a new message template. Admin templates are public and visible to all users.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -327,8 +328,18 @@ export default function TemplatesPage() {
                           <FileText className="h-4 w-4 text-gray-600" />
                         </div>
                         <div>
-                          <p className="font-medium">{template.title}</p>
-                          <p className="text-sm text-gray-500">ID: {template.id.slice(0, 8)}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{template.title}</p>
+                            {template.is_admin_template && (
+                              <Badge variant="secondary" className="text-xs">
+                                Public
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            ID: {template.id.slice(0, 8)} • {template.creator_name}
+                            {template.is_admin_template ? ' (Admin)' : ' (User)'}
+                          </p>
                         </div>
                       </div>
                     </TableCell>

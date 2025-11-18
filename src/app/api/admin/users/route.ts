@@ -19,8 +19,8 @@ export async function GET() {
         name: true,
         email: true,
         role: true,
-        createdAt: true,
-        updatedAt: true
+        status: true,
+        createdAt: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -30,10 +30,9 @@ export async function GET() {
     // Transform to match expected format
     const transformedUsers = users.map(user => ({
       ...user,
-      status: 'ACTIVE', // Default status since schema doesn't have it
       default_country_code: '+1', // Default country code since schema doesn't have it
       created_at: user.createdAt,
-      updated_at: user.updatedAt
+      updated_at: user.createdAt // Use createdAt as fallback since updatedAt doesn't exist
     }))
 
     return createSuccessResponse(transformedUsers)
@@ -73,26 +72,26 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
-        password: passwordHash,
-        role
+        passwordHash,
+        role,
+        status: 'ACTIVE' // Default status
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
-        createdAt: true,
-        updatedAt: true
+        status: true,
+        createdAt: true
       }
     })
 
     // Transform to match expected format
     const transformedUser = {
       ...user,
-      status: 'ACTIVE', // Default status since schema doesn't have it
       default_country_code: '+1', // Default country code since schema doesn't have it
       created_at: user.createdAt,
-      updated_at: user.updatedAt
+      updated_at: user.createdAt // Use createdAt as fallback since updatedAt doesn't exist
     }
 
     return createSuccessResponse(transformedUser, 201)
