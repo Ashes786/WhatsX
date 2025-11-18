@@ -50,7 +50,8 @@ async function main() {
     data: {
       title: 'Welcome Message',
       content: 'Hello {name}, welcome to our service!',
-      userId: admin.id,
+      created_by: admin.id,
+      is_active: true,
     },
   })
 
@@ -58,7 +59,8 @@ async function main() {
     data: {
       title: 'Promotional Offer',
       content: 'Hi {name}, check out our latest offer: {offer}',
-      userId: admin.id,
+      created_by: admin.id,
+      is_active: true,
     },
   })
 

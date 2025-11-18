@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
         // Check for duplicates
         const existingContact = await db.contact.findFirst({
           where: {
-            owner_id: session.user.id,
-            e164_phone: e164_phone
+            userId: session.user.id,
+            phoneNumber: e164_phone
           }
         })
 
@@ -87,10 +87,9 @@ export async function POST(request: NextRequest) {
         // Create contact
         const contact = await db.contact.create({
           data: {
-            owner_id: session.user.id,
+            userId: session.user.id,
             name,
-            raw_phone,
-            e164_phone,
+            phoneNumber: raw_phone,
             label
           }
         })
@@ -100,7 +99,7 @@ export async function POST(request: NextRequest) {
           row: i + 1,
           name,
           raw_phone,
-          e164_phone,
+          e164_phone: raw_phone,
           label
         })
 

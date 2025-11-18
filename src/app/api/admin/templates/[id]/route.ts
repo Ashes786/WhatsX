@@ -41,6 +41,76 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { title, content, is_active } = body
+
+    // Check if template exists
+    const existingTemplate = await db.template.findUnique({
+      where: { id: params.id }
+    })
+
+    if (!existingTemplate) {
+      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+    }
+
+    // Check if title is already taken by another template
+    if (title && title !== existingTemplate.title) {
+      const titleTaken = await db.template.findFirst({
+        where: {
+          title,
+          created_by: session.user.id,
+          NOT: {
+            id: params.id
+          }
+        }
+      })
+
+      if (titleTaken) {
+        return NextResponse.json({ error: 'Template with this title already exists' }, { status: 400 })
+      }
+    }
+
+    // Update template with only provided fields
+    const updateData: any = {}
+    if (title !== undefined) updateData.title = title
+    if (content !== undefined) updateData.content = content
+    if (is_active !== undefined) updateData.is_active = is_active
+
+    const template = await db.template.update({
+      where: { id: params.id },
+      data: updateData,
+      include: {
+        creator: {
+          select: {
+            name: true
+          }
+        }
+      }
+    })
+
+    const transformedTemplate = {
+      ...template,
+      creator_name: template.creator.name
+    }
+
+    return NextResponse.json(transformedTemplate)
+  } catch (error) {
+    console.error('Error updating template:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }

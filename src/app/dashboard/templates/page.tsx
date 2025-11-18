@@ -226,10 +226,10 @@ export default function TemplatesPage() {
                   value={newTemplate.content}
                   onChange={(e) => setNewTemplate(prev => ({ ...prev, content: e.target.value }))}
                   rows={6}
-                  placeholder="Hello {{name}}, welcome to our service!..."
+                  placeholder="Hello {name}, welcome to our service!..."
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Use {{name}}, {{phone}}, or other variables for personalization
+                  Use {'{name}'}, {'{phone}'}, or other variables for personalization
                 </p>
               </div>
               <div className="flex items-center space-x-2">
@@ -424,7 +424,7 @@ export default function TemplatesPage() {
                   rows={6}
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Use {{name}}, {{phone}}, or other variables for personalization
+                  Use {'{name}'}, {'{phone}'}, or other variables for personalization
                 </p>
               </div>
               <div className="flex items-center space-x-2">

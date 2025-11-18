@@ -17,7 +17,7 @@ export async function GET(
     const contact = await db.contact.findFirst({
       where: {
         id: params.id,
-        owner_id: session.user.id
+        userId: session.user.id
       }
     })
 
@@ -25,7 +25,16 @@ export async function GET(
       return NextResponse.json({ error: 'Contact not found' }, { status: 404 })
     }
 
-    return NextResponse.json(contact)
+    // Transform to match expected format
+    const transformedContact = {
+      ...contact,
+      raw_phone: contact.phoneNumber,
+      e164_phone: contact.phoneNumber,
+      label: contact.label || '',
+      added_at: contact.addedAt
+    }
+
+    return NextResponse.json(transformedContact)
   } catch (error) {
     console.error('Error fetching contact:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -50,7 +59,7 @@ export async function PUT(
     const existingContact = await db.contact.findFirst({
       where: {
         id: params.id,
-        owner_id: session.user.id
+        userId: session.user.id
       }
     })
 
@@ -58,16 +67,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Contact not found' }, { status: 404 })
     }
 
-    // Normalize phone number if provided
-    let e164_phone = existingContact.e164_phone
-    if (raw_phone && raw_phone !== existingContact.raw_phone) {
-      e164_phone = normalizePhoneNumber(raw_phone, session.user.default_country_code)
-      
-      // Check if new phone number conflicts with existing contacts
+    // Check if new phone number conflicts with existing contacts (excluding current contact)
+    if (raw_phone && raw_phone !== existingContact.phoneNumber) {
       const conflictingContact = await db.contact.findFirst({
         where: {
-          owner_id: session.user.id,
-          e164_phone: e164_phone,
+          userId: session.user.id,
+          phoneNumber: raw_phone,
           NOT: {
             id: params.id
           }
@@ -84,13 +89,21 @@ export async function PUT(
       where: { id: params.id },
       data: {
         name: name || null,
-        raw_phone: raw_phone || existingContact.raw_phone,
-        e164_phone,
+        phoneNumber: raw_phone || existingContact.phoneNumber,
         label: label || null
       }
     })
 
-    return NextResponse.json(contact)
+    // Transform to match expected format
+    const transformedContact = {
+      ...contact,
+      raw_phone: contact.phoneNumber,
+      e164_phone: contact.phoneNumber,
+      label: contact.label || '',
+      added_at: contact.addedAt
+    }
+
+    return NextResponse.json(transformedContact)
   } catch (error) {
     console.error('Error updating contact:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -112,7 +125,7 @@ export async function DELETE(
     const existingContact = await db.contact.findFirst({
       where: {
         id: params.id,
-        owner_id: session.user.id
+        userId: session.user.id
       }
     })
 

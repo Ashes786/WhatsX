@@ -38,6 +38,8 @@ export default function ContactsPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [newContact, setNewContact] = useState({
     name: '',
     phone: '',
@@ -114,6 +116,69 @@ export default function ContactsPage() {
     } catch (error) {
       console.error('Failed to upload CSV:', error)
       alert('Upload failed. Please try again.')
+    }
+  }
+
+  const handleEditContact = (contact: Contact) => {
+    setSelectedContact(contact)
+    setNewContact({
+      name: contact.name || '',
+      phone: contact.raw_phone,
+      label: contact.label || ''
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const handleUpdateContact = async () => {
+    if (!selectedContact) return
+
+    try {
+      const response = await fetch(`/api/contacts/${selectedContact.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newContact.name || null,
+          raw_phone: newContact.phone,
+          label: newContact.label || null
+        }),
+      })
+
+      if (response.ok) {
+        await fetchContacts()
+        setIsEditDialogOpen(false)
+        setSelectedContact(null)
+        setNewContact({ name: '', phone: '', label: '' })
+      } else {
+        const error = await response.json()
+        alert(`Failed to update contact: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to update contact:', error)
+      alert('Failed to update contact. Please try again.')
+    }
+  }
+
+  const handleDeleteContact = async (contact: Contact) => {
+    if (!confirm(`Are you sure you want to delete ${contact.name || 'this contact'}?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/contacts/${contact.id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        await fetchContacts()
+      } else {
+        const error = await response.json()
+        alert(`Failed to delete contact: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete contact:', error)
+      alert('Failed to delete contact. Please try again.')
     }
   }
 
@@ -228,6 +293,68 @@ export default function ContactsPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Contact Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-xl">
+              <div className="p-2 bg-green-100 rounded-lg mr-3">
+                <Edit className="h-5 w-5 text-green-600" />
+              </div>
+              Edit Contact
+            </DialogTitle>
+            <DialogDescription>
+              Update contact information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-name" className="text-sm font-medium">Name (Optional)</Label>
+              <Input
+                id="edit-name"
+                value={newContact.name}
+                onChange={(e) => setNewContact(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="John Doe"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-phone" className="text-sm font-medium">Phone Number *</Label>
+              <Input
+                id="edit-phone"
+                value={newContact.phone}
+                onChange={(e) => setNewContact(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="+1234567890"
+                required
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-label" className="text-sm font-medium">Label (Optional)</Label>
+              <Input
+                id="edit-label"
+                value={newContact.label}
+                onChange={(e) => setNewContact(prev => ({ ...prev, label: e.target.value }))}
+                placeholder="Friend, Client, etc."
+                className="mt-1"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => {
+                setIsEditDialogOpen(false)
+                setSelectedContact(null)
+                setNewContact({ name: '', phone: '', label: '' })
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateContact} className="bg-green-600 hover:bg-green-700">
+                Update Contact
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="px-6 space-y-6">
         {/* Enhanced Stats Cards */}
@@ -380,6 +507,7 @@ export default function ContactsPage() {
                               size="sm" 
                               className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
                               title="Edit Contact"
+                              onClick={() => handleEditContact(contact)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -388,6 +516,7 @@ export default function ContactsPage() {
                               size="sm" 
                               className="hover:bg-red-50 hover:text-red-600 transition-colors"
                               title="Delete Contact"
+                              onClick={() => handleDeleteContact(contact)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
