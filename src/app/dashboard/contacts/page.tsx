@@ -16,11 +16,8 @@ import {
   Edit, 
   Trash2,
   Phone,
-  Mail,
   User,
-  Upload,
-  Download,
-  Filter
+  Upload
 } from 'lucide-react'
 
 interface Contact {
@@ -200,46 +197,43 @@ export default function ContactsPage() {
   }
 
   return (
-    <div className="space-y-6 h-full overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Enhanced Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-6 pt-6 pb-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Contact Management</h1>
-              <p className="text-gray-600">
-                Manage your contact list and organize recipients for messaging campaigns
-              </p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleCSVUpload}
-                className="hidden"
-                id="csv-upload"
-              />
-              <Button
-                variant="outline"
-                onClick={() => document.getElementById('csv-upload')?.click()}
-                className="flex items-center gap-2 border-2 hover:border-green-500 hover:bg-green-50 transition-all"
-              >
-                <Upload className="h-4 w-4" />
-                Upload CSV
-              </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4" />
-                    Add Contact
-                  </Button>
-                </DialogTrigger>
+    <div className="space-y-6 h-full overflow-y-auto bg-background p-6">
+      {/* Header */}
+      <div className="border-b -mx-6 px-6 py-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Contacts</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your contact list and organize recipients for messaging campaigns
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              onChange={handleCSVUpload}
+              className="hidden"
+              id="csv-upload"
+            />
+            <Button
+              variant="outline"
+              onClick={() => document.getElementById('csv-upload')?.click()}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Upload CSV
+            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Contact
+                </Button>
+              </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle className="flex items-center text-xl">
-                      <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                        <User className="h-5 w-5 text-blue-600" />
-                      </div>
+                    <DialogTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
                       Add New Contact
                     </DialogTitle>
                     <DialogDescription>
@@ -248,7 +242,7 @@ export default function ContactsPage() {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="name" className="text-sm font-medium">Name (Optional)</Label>
+                      <Label htmlFor="name">Name (Optional)</Label>
                       <Input
                         id="name"
                         value={newContact.name}
@@ -258,7 +252,7 @@ export default function ContactsPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
+                      <Label htmlFor="phone">Phone Number *</Label>
                       <Input
                         id="phone"
                         value={newContact.phone}
@@ -269,7 +263,7 @@ export default function ContactsPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="label" className="text-sm font-medium">Label (Optional)</Label>
+                      <Label htmlFor="label">Label (Optional)</Label>
                       <Input
                         id="label"
                         value={newContact.label}
@@ -282,7 +276,7 @@ export default function ContactsPage() {
                       <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={handleAddContact} className="bg-blue-600 hover:bg-blue-700">
+                      <Button onClick={handleAddContact}>
                         Add Contact
                       </Button>
                     </div>
@@ -298,10 +292,8 @@ export default function ContactsPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center text-xl">
-              <div className="p-2 bg-green-100 rounded-lg mr-3">
-                <Edit className="h-5 w-5 text-green-600" />
-              </div>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
               Edit Contact
             </DialogTitle>
             <DialogDescription>
@@ -310,7 +302,7 @@ export default function ContactsPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="edit-name" className="text-sm font-medium">Name (Optional)</Label>
+              <Label htmlFor="edit-name">Name (Optional)</Label>
               <Input
                 id="edit-name"
                 value={newContact.name}
@@ -320,7 +312,7 @@ export default function ContactsPage() {
               />
             </div>
             <div>
-              <Label htmlFor="edit-phone" className="text-sm font-medium">Phone Number *</Label>
+              <Label htmlFor="edit-phone">Phone Number *</Label>
               <Input
                 id="edit-phone"
                 value={newContact.phone}
@@ -331,7 +323,7 @@ export default function ContactsPage() {
               />
             </div>
             <div>
-              <Label htmlFor="edit-label" className="text-sm font-medium">Label (Optional)</Label>
+              <Label htmlFor="edit-label">Label (Optional)</Label>
               <Input
                 id="edit-label"
                 value={newContact.label}
@@ -348,7 +340,7 @@ export default function ContactsPage() {
               }}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdateContact} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleUpdateContact}>
                 Update Contact
               </Button>
             </div>
@@ -356,197 +348,149 @@ export default function ContactsPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="px-6 space-y-6">
-        {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="group hover:shadow-2xl transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-400 rounded-full opacity-20"></div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
-              <CardTitle className="text-sm font-medium text-blue-100">Total Contacts</CardTitle>
-              <div className="p-2 bg-blue-400 bg-opacity-30 rounded-lg group-hover:scale-110 transition-transform">
-                <Users className="h-5 w-5 text-white" />
-              </div>
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="relative">
-              <div className="text-4xl font-bold text-white mb-2">{contacts.length}</div>
-              <p className="text-xs text-blue-100">All contacts in your list</p>
+            <CardContent>
+              <div className="text-2xl font-bold">{contacts.length}</div>
+              <p className="text-xs text-muted-foreground">All contacts in your list</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl transition-all duration-300 border-0 bg-gradient-to-br from-green-500 to-green-600 text-white overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-green-400 rounded-full opacity-20"></div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
-              <CardTitle className="text-sm font-medium text-green-100">Named Contacts</CardTitle>
-              <div className="p-2 bg-green-400 bg-opacity-30 rounded-lg group-hover:scale-110 transition-transform">
-                <User className="h-5 w-5 text-white" />
-              </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Named Contacts</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="relative">
-              <div className="text-4xl font-bold text-white mb-2">{contacts.filter(c => c.name).length}</div>
-              <p className="text-xs text-green-100">Contacts with names</p>
+            <CardContent>
+              <div className="text-2xl font-bold">{contacts.filter(c => c.name).length}</div>
+              <p className="text-xs text-muted-foreground">Contacts with names</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl transition-all duration-300 border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-purple-400 rounded-full opacity-20"></div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
-              <CardTitle className="text-sm font-medium text-purple-100">Labeled Contacts</CardTitle>
-              <div className="p-2 bg-purple-400 bg-opacity-30 rounded-lg group-hover:scale-110 transition-transform">
-                <Mail className="h-5 w-5 text-white" />
-              </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Labeled Contacts</CardTitle>
+              <Badge className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="relative">
-              <div className="text-4xl font-bold text-white mb-2">{contacts.filter(c => c.label).length}</div>
-              <p className="text-xs text-purple-100">Organized with labels</p>
+            <CardContent>
+              <div className="text-2xl font-bold">{contacts.filter(c => c.label).length}</div>
+              <p className="text-xs text-muted-foreground">Organized with labels</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Enhanced Search and Filter */}
-        <Card className="shadow-xl border-0 bg-white">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-            <CardTitle className="flex items-center text-xl text-gray-900">
-              <div className="p-2 bg-blue-600 rounded-lg mr-3">
-                <Search className="h-5 w-5 text-white" />
-              </div>
-              Search & Filter Contacts
+        {/* Search and Filter */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Search Contacts
             </CardTitle>
-            <CardDescription className="text-gray-600">
-              Find contacts quickly by name, phone, or label
+            <CardDescription>
+              Find contacts by name, phone number, or label
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search by name, phone, or label..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-12 border-2 focus:border-blue-500"
-                />
-              </div>
-              <Button variant="outline" className="flex items-center gap-2 h-12 border-2 hover:border-purple-500">
-                <Filter className="h-4 w-4" />
-                Filters
-              </Button>
-              <Button variant="outline" className="flex items-center gap-2 h-12 border-2 hover:border-green-500">
-                <Download className="h-4 w-4" />
-                Export
-              </Button>
+          <CardContent>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search contacts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Enhanced Contacts Table */}
-        <Card className="shadow-xl border-0 bg-white">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="text-xl text-gray-900">All Contacts</CardTitle>
-                <CardDescription className="text-gray-600">
-                  {filteredContacts.length} contact{filteredContacts.length !== 1 ? 's' : ''} found
-                </CardDescription>
-              </div>
-              <Badge variant="outline" className="px-3 py-1">
-                {contacts.length} Total
-              </Badge>
-            </div>
+        {/* Contacts Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Contacts List</CardTitle>
+            <CardDescription>
+              {filteredContacts.length} {filteredContacts.length === 1 ? 'contact' : 'contacts'} found
+            </CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
-            {filteredContacts.length > 0 ? (
-              <div className="rounded-lg border border-gray-200 overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-gray-50">
-                    <TableRow>
-                      <TableHead className="font-semibold text-gray-900">Contact</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Phone</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Label</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Added</TableHead>
-                      <TableHead className="font-semibold text-gray-900 text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredContacts.map((contact, index) => (
-                      <TableRow key={contact.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <TableCell>
-                          <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-blue-100 rounded-full">
-                              <User className="h-4 w-4 text-blue-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{contact.name || 'Unnamed Contact'}</p>
-                              <p className="text-sm text-gray-500">ID: {contact.id.slice(0, 8)}</p>
-                            </div>
-                          </div>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Phone Number</TableHead>
+                    <TableHead>Label</TableHead>
+                    <TableHead>Added Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredContacts.length > 0 ? (
+                    filteredContacts.map((contact) => (
+                      <TableRow key={contact.id}>
+                        <TableCell className="font-medium">
+                          {contact.name || (
+                            <span className="text-muted-foreground">No name</span>
+                          )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Phone className="h-4 w-4 text-gray-400" />
-                            <span className="font-mono text-sm">{contact.raw_phone}</span>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            {contact.raw_phone}
                           </div>
                         </TableCell>
                         <TableCell>
                           {contact.label ? (
-                            <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors">
-                              {contact.label}
-                            </Badge>
+                            <Badge variant="secondary">{contact.label}</Badge>
                           ) : (
-                            <span className="text-gray-400 text-sm">No label</span>
+                            <span className="text-muted-foreground">No label</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm text-gray-600">
-                            {new Date(contact.added_at).toLocaleDateString()}
-                          </div>
+                          {new Date(contact.added_at).toLocaleDateString()}
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-end space-x-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                              title="Edit Contact"
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleEditContact(contact)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                              title="Delete Contact"
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleDeleteContact(contact)}
+                              className="text-destructive hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-10 w-10 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No contacts found</h3>
-                <p className="text-gray-600 mb-6">
-                  {searchTerm ? 'Try adjusting your search terms' : 'Start by adding your first contact'}
-                </p>
-                {!searchTerm && (
-                  <Button 
-                    onClick={() => setIsAddDialogOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Contact
-                  </Button>
-                )}
-              </div>
-            )}
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <Users className="h-8 w-8 text-muted-foreground" />
+                          <p className="text-muted-foreground">No contacts found</p>
+                          <p className="text-sm text-muted-foreground">
+                            {searchTerm ? 'Try adjusting your search terms' : 'Add your first contact to get started'}
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

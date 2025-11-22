@@ -18,13 +18,9 @@ import {
   FileText, 
   Clock,
   CheckCircle,
-  AlertCircle,
   Plus,
   Users,
-  Calendar,
-  Upload,
-  X,
-  Zap
+  Calendar
 } from 'lucide-react'
 
 interface Template {
@@ -82,7 +78,6 @@ export default function BulkMessagingPage() {
   const [sending, setSending] = useState(false)
   const [activeTab, setActiveTab] = useState('compose')
   
-  // Template creation dialog state
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
   const [templateForm, setTemplateForm] = useState({
     title: '',
@@ -272,233 +267,209 @@ export default function BulkMessagingPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 h-full overflow-y-auto bg-background p-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Bulk Messaging</h1>
-          <p className="text-gray-600 mt-2">
-            Send personalized messages to multiple contacts at once
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-sm text-gray-600">Live</span>
+      <div className="border-b -mx-6 px-6 py-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Bulk Messaging</h1>
+            <p className="text-muted-foreground mt-1">
+              Send personalized messages to multiple contacts at once
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-muted-foreground">Live</span>
+          </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <MessageSquare className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{messages.length}</p>
-                <p className="text-sm text-gray-600">Total Messages</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{messages.length}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-green-100 rounded-full">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{messages.filter(m => m.status === 'SENT').length}</p>
-                <p className="text-sm text-gray-600">Messages Sent</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{messages.filter(m => m.status === 'SENT').length}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{messages.filter(m => m.status === 'SCHEDULED').length}</p>
-                <p className="text-sm text-gray-600">Scheduled</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{messages.filter(m => m.status === 'SCHEDULED').length}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Users className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{contacts.length}</p>
-                <p className="text-sm text-gray-600">Total Contacts</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{contacts.length}</div>
+            </CardContent>
+          </Card>
+        </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="compose">Compose</TabsTrigger>
-          <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-        </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="compose">Compose</TabsTrigger>
+            <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="compose" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Message Composition */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <MessageSquare className="h-5 w-5 mr-2" />
-                  Compose Bulk Message
-                </CardTitle>
-                <CardDescription>
-                  Create a message and send to multiple contacts
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <Label htmlFor="template">Template (Optional)</Label>
+          <TabsContent value="compose" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Message Composition */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Compose Message
+                  </CardTitle>
+                  <CardDescription>
+                    Create a message and send to multiple contacts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <Label htmlFor="template">Template (Optional)</Label>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setIsTemplateDialogOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Create Template
+                      </Button>
+                    </div>
+                    <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-2">
+                                <span>{template.title}</span>
+                                {template.is_admin_template && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Public
+                                  </Badge>
+                                )}
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {template.is_admin_template ? `Admin • ${template.creator_name}` : `Your template`}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="message">Message Content</Label>
+                    <Textarea
+                      id="message"
+                      value={messageContent}
+                      onChange={(e) => setMessageContent(e.target.value)}
+                      rows={6}
+                      placeholder="Type your message here..."
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Use {'{name}'} for personalization
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="schedule">Schedule (Optional)</Label>
+                    <Input
+                      id="schedule"
+                      type="datetime-local"
+                      value={scheduledAt}
+                      onChange={(e) => setScheduledAt(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Leave empty to send immediately
+                    </p>
+                  </div>
+
+                  <div className="flex space-x-2">
                     <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setIsTemplateDialogOpen(true)}
+                      onClick={() => handleSendMessage(false)}
+                      disabled={!messageContent.trim() || getSelectedRecipientCount() === 0 || sending}
+                      className="flex-1"
                     >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Create Template
+                      <Send className="h-4 w-4 mr-2" />
+                      {sending ? 'Sending...' : 'Send Now'}
+                    </Button>
+                    <Button 
+                      onClick={() => handleSendMessage(true)}
+                      disabled={!messageContent.trim() || getSelectedRecipientCount() === 0 || sending || !scheduledAt}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {sending ? 'Scheduling...' : 'Schedule'}
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500 mb-2">
-                    Public templates (created by admins) are visible to all users. Your templates are private.
-                  </p>
-                  <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {templates.map((template) => (
-                        <SelectItem key={template.id} value={template.id}>
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                              <span>{template.title}</span>
-                              {template.is_admin_template && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Public
-                                </Badge>
-                              )}
-                            </div>
-                            <span className="text-xs text-gray-500">
-                              {template.is_admin_template ? `Admin • ${template.creator_name}` : `Your template`}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div>
-                  <Label htmlFor="message">Message Content</Label>
-                  <Textarea
-                    id="message"
-                    value={messageContent}
-                    onChange={(e) => setMessageContent(e.target.value)}
-                    rows={6}
-                    placeholder="Type your message here..."
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Use {'{name}'} for personalization
-                  </p>
-                </div>
+              {/* Recipient Selection */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Select Recipients
+                  </CardTitle>
+                  <CardDescription>
+                    Choose contacts or broadcast lists to send message to
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="broadcast-list">Broadcast List</Label>
+                    <Select value={selectedBroadcastList} onValueChange={setSelectedBroadcastList}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a broadcast list" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {broadcastLists.map((list) => (
+                          <SelectItem key={list.id} value={list.id}>
+                            {list.title} ({list.broadcastContacts.length} contacts)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div>
-                  <Label htmlFor="schedule">Schedule (Optional)</Label>
-                  <Input
-                    id="schedule"
-                    type="datetime-local"
-                    value={scheduledAt}
-                    onChange={(e) => setScheduledAt(e.target.value)}
-                    min={new Date().toISOString().slice(0, 16)}
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Leave empty to send immediately
-                  </p>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button 
-                    onClick={() => handleSendMessage(false)}
-                    disabled={!messageContent.trim() || getSelectedRecipientCount() === 0 || sending}
-                    className="flex-1"
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    {sending ? 'Sending...' : 'Send Now'}
-                  </Button>
-                  <Button 
-                    onClick={() => handleSendMessage(true)}
-                    disabled={!messageContent.trim() || getSelectedRecipientCount() === 0 || sending || !scheduledAt}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {sending ? 'Scheduling...' : 'Schedule'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recipient Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Users className="h-5 w-5 mr-2" />
-                  Select Recipients
-                </CardTitle>
-                <CardDescription>
-                  Choose contacts or broadcast lists to send to
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="broadcast-list">Broadcast List</Label>
-                  <Select value={selectedBroadcastList} onValueChange={(value) => {
-                    setSelectedBroadcastList(value)
-                    if (value) {
-                      setSelectedContacts([]) // Clear individual contacts when using broadcast list
-                    }
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a broadcast list" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {broadcastLists.map((list) => (
-                        <SelectItem key={list.id} value={list.id}>
-                          {list.title} ({list.broadcastContacts.length} contacts)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="text-center text-sm text-gray-500">OR</div>
-
-                <div>
-                  <Label htmlFor="contacts">Individual Contacts</Label>
-                  <div className="max-h-60 overflow-y-auto border rounded-md p-3 space-y-2">
-                    {contacts.length > 0 ? (
-                      contacts.map((contact) => (
+                  <div>
+                    <Label>Individual Contacts</Label>
+                    <div className="mt-2 space-y-2 max-h-48 overflow-y-auto border rounded-md p-2">
+                      {contacts.map((contact) => (
                         <div key={contact.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={contact.id}
@@ -506,196 +477,142 @@ export default function BulkMessagingPage() {
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 setSelectedContacts([...selectedContacts, contact.id])
-                                setSelectedBroadcastList('') // Clear broadcast list when selecting individual contacts
                               } else {
                                 setSelectedContacts(selectedContacts.filter(id => id !== contact.id))
                               }
                             }}
-                            disabled={!!selectedBroadcastList}
                           />
-                          <Label htmlFor={contact.id} className="text-sm font-medium cursor-pointer flex-1">
-                            {contact.name} ({contact.phoneNumber})
-                            {contact.label && <span className="text-gray-500 ml-1">- {contact.label}</span>}
+                          <Label htmlFor={contact.id} className="text-sm">
+                            {contact.name || contact.phoneNumber}
                           </Label>
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-sm">No contacts available. Add contacts first.</p>
-                    )}
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Zap className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">
-                      {getSelectedRecipientCount()} recipient{getSelectedRecipientCount() !== 1 ? 's' : ''} selected
-                    </span>
+                  <div className="p-3 bg-muted rounded-md">
+                    <p className="text-sm font-medium">
+                      Selected Recipients: {getSelectedRecipientCount()}
+                    </p>
                   </div>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Duplicates will be automatically removed
-                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="scheduled" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Scheduled Messages</CardTitle>
+                <CardDescription>
+                  Messages scheduled for future delivery
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {messages.filter(m => m.status === 'SCHEDULED').map((message) => (
+                    <div key={message.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium">{message.content}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Scheduled for: {message.scheduledAt ? new Date(message.scheduledAt).toLocaleString() : 'N/A'}
+                          </p>
+                        </div>
+                        {getStatusBadge(message.status)}
+                      </div>
+                    </div>
+                  ))}
+                  {messages.filter(m => m.status === 'SCHEDULED').length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No scheduled messages
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="scheduled" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
-                Scheduled Messages
-              </CardTitle>
-              <CardDescription>
-                Messages scheduled for future delivery
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {messages.filter(m => m.status === 'SCHEDULED').length > 0 ? (
-                <div className="space-y-4">
-                  {messages.filter(m => m.status === 'SCHEDULED').map((message) => (
-                    <div key={message.id} className="p-4 bg-yellow-50 rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4 text-yellow-600" />
-                          <span className="text-sm font-medium text-gray-900">
-                            {message.content.substring(0, 30)}...
-                          </span>
-                        </div>
-                        {getStatusBadge(message.status)}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {message.content.substring(0, 100)}
-                        {message.content.length > 100 && '...'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Scheduled for: {message.scheduledAt ? new Date(message.scheduledAt).toLocaleString() : 'Unknown'}
-                      </p>
-                      <div className="mt-2 text-sm text-gray-600">
-                        Will be sent to {message.deliveryLogs.length} contact{message.deliveryLogs.length !== 1 ? 's' : ''}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No scheduled messages</p>
-                  <p className="text-sm text-gray-400">Schedule a message to see it here</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="history" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Clock className="h-5 w-5 mr-2" />
-                Message History
-              </CardTitle>
-              <CardDescription>
-                Your recently sent messages
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {messages.length > 0 ? (
+          <TabsContent value="history" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Message History</CardTitle>
+                <CardDescription>
+                  All messages sent through the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-4">
                   {messages.map((message) => (
-                    <div key={message.id} className="p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <MessageSquare className="h-4 w-4 text-gray-600" />
-                          <span className="text-sm font-medium text-gray-900">
-                            {message.content.substring(0, 30)}...
-                          </span>
+                    <div key={message.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium">{message.content}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Sent: {new Date(message.createdAt).toLocaleString()}
+                          </p>
+                          {message.deliveryLogs && (
+                            <p className="text-sm text-muted-foreground">
+                              Delivered to: {message.deliveryLogs.length} contacts
+                            </p>
+                          )}
                         </div>
                         {getStatusBadge(message.status)}
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {message.content.substring(0, 100)}
-                        {message.content.length > 100 && '...'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(message.createdAt).toLocaleString()}
-                      </p>
-                      <div className="mt-2 text-sm text-gray-600">
-                        Sent to {message.deliveryLogs.length} contact{message.deliveryLogs.length !== 1 ? 's' : ''}
-                      </div>
                     </div>
                   ))}
+                  {messages.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No messages sent yet
+                    </p>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No messages sent yet</p>
-                  <p className="text-sm text-gray-400">Send your first message using the composer</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Template Creation Dialog */}
       <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create New Template</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Create Template
+            </DialogTitle>
             <DialogDescription>
-              Create a reusable message template. Your templates will be private and only visible to you.
+              Create a reusable message template
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateTemplate} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="template-title">Template Title</Label>
+            <div>
+              <Label htmlFor="template-title">Title</Label>
               <Input
                 id="template-title"
-                type="text"
                 value={templateForm.title}
                 onChange={(e) => setTemplateForm(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter template title"
+                placeholder="Template title"
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="template-content">Template Content</Label>
+            <div>
+              <Label htmlFor="template-content">Content</Label>
               <Textarea
                 id="template-content"
                 value={templateForm.content}
                 onChange={(e) => setTemplateForm(prev => ({ ...prev, content: e.target.value }))}
-                rows={6}
-                placeholder="Enter your message template here... Use {name} for personalization"
+                placeholder="Template content"
+                rows={4}
                 required
               />
-              <p className="text-sm text-gray-500">
-                Use {'{name}'} for personalization. This template will be available for future messages.
-              </p>
             </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsTemplateDialogOpen(false)}
-                disabled={creatingTemplate}
-              >
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={creatingTemplate}>
-                {creatingTemplate ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Create Template
-                  </>
-                )}
+                {creatingTemplate ? 'Creating...' : 'Create Template'}
               </Button>
             </div>
           </form>
