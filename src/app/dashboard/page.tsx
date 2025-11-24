@@ -192,55 +192,63 @@ export default function DashboardPage() {
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className={`grid grid-cols-1 md:grid-cols-2 ${userRole === 'ADMIN' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4`}>
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Templates</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Templates</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <FileText className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.templates}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-gray-900">{stats.templates}</div>
+              <p className="text-xs text-gray-600">
                 {userRole === 'ADMIN' ? 'Total templates' : 'Available templates'}
               </p>
             </CardContent>
           </Card>
 
           {userRole === 'ADMIN' && (
-            <Card>
+            <Card className="border-blue-200 bg-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-gray-900">Active Users</CardTitle>
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <Users className="h-4 w-4 text-white" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.activeUsers}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-2xl font-bold text-gray-900">{stats.activeUsers}</div>
+                <p className="text-xs text-gray-600">
                   Total registered users
                 </p>
               </CardContent>
             </Card>
           )}
 
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Contacts</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Contacts</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Users className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.contacts}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-gray-900">{stats.contacts}</div>
+              <p className="text-xs text-gray-600">
                 Total contacts
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
-              <Send className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Messages Sent</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Send className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.recentJobs}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-gray-900">{stats.recentJobs}</div>
+              <p className="text-xs text-gray-600">
                 Total messages sent
               </p>
             </CardContent>
@@ -250,13 +258,15 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2">
-            <Card className="h-full">
+            <Card className="h-full border-blue-200 bg-white">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <div className="p-2 bg-blue-600 rounded-lg">
+                    <Clock className="h-5 w-5 text-white" />
+                  </div>
                   Quick Actions
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-600">
                   Common tasks you can perform to maximize your productivity
                 </CardDescription>
               </CardHeader>
@@ -269,24 +279,28 @@ export default function DashboardPage() {
                         variant="outline" 
                         size="lg" 
                         onClick={() => window.location.href = '/dashboard/contacts'}
-                        className="flex items-center gap-3 h-14 justify-start"
+                        className="flex items-center gap-3 h-14 justify-start border-blue-200 bg-white hover:bg-blue-50 text-gray-900"
                       >
-                        <Users className="h-5 w-5" />
+                        <div className="p-2 bg-blue-600 rounded-lg">
+                          <Users className="h-5 w-5 text-white" />
+                        </div>
                         <div className="text-left">
                           <div className="font-medium">Manage Contacts</div>
-                          <div className="text-xs text-muted-foreground">Add, edit, organize</div>
+                          <div className="text-xs text-gray-600">Add, edit, organize</div>
                         </div>
                       </Button>
                       <Button 
                         variant="outline" 
                         size="lg" 
                         onClick={() => window.location.href = '/dashboard/bulk-messaging'}
-                        className="flex items-center gap-3 h-14 justify-start"
+                        className="flex items-center gap-3 h-14 justify-start border-blue-200 bg-white hover:bg-blue-50 text-gray-900"
                       >
-                        <Send className="h-5 w-5" />
+                        <div className="p-2 bg-blue-600 rounded-lg">
+                          <Send className="h-5 w-5 text-white" />
+                        </div>
                         <div className="text-left">
                           <div className="font-medium">Send Messages</div>
-                          <div className="text-xs text-muted-foreground">Create campaigns</div>
+                          <div className="text-xs text-gray-600">Create campaigns</div>
                         </div>
                       </Button>
                     </div>
@@ -302,24 +316,28 @@ export default function DashboardPage() {
                           variant="outline" 
                           size="lg" 
                           onClick={() => window.location.href = '/dashboard/users'}
-                          className="flex items-center gap-3 h-14 justify-start"
+                          className="flex items-center gap-3 h-14 justify-start border-blue-200 bg-white hover:bg-blue-50 text-gray-900"
                         >
-                          <Users className="h-5 w-5" />
+                          <div className="p-2 bg-blue-600 rounded-lg">
+                            <Users className="h-5 w-5 text-white" />
+                          </div>
                           <div className="text-left">
                             <div className="font-medium">Manage Users</div>
-                            <div className="text-xs text-muted-foreground">User administration</div>
+                            <div className="text-xs text-gray-600">User administration</div>
                           </div>
                         </Button>
                         <Button 
                           variant="outline" 
                           size="lg" 
                           onClick={() => window.location.href = '/dashboard/templates'}
-                          className="flex items-center gap-3 h-14 justify-start"
+                          className="flex items-center gap-3 h-14 justify-start border-blue-200 bg-white hover:bg-blue-50 text-gray-900"
                         >
-                          <FileText className="h-5 w-5" />
+                          <div className="p-2 bg-blue-600 rounded-lg">
+                            <FileText className="h-5 w-5 text-white" />
+                          </div>
                           <div className="text-left">
                             <div className="font-medium">Manage Templates</div>
-                            <div className="text-xs text-muted-foreground">Template administration</div>
+                            <div className="text-xs text-gray-600">Template administration</div>
                           </div>
                         </Button>
                       </div>
@@ -332,10 +350,10 @@ export default function DashboardPage() {
 
           {/* Recent Activity */}
           <div className="xl:col-span-1">
-            <Card className="h-full">
+            <Card className="h-full border-blue-200 bg-white">
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-gray-900">Recent Activity</CardTitle>
+                <CardDescription className="text-gray-600">
                   Latest activities in your workspace
                 </CardDescription>
               </CardHeader>
@@ -344,18 +362,18 @@ export default function DashboardPage() {
                   {recentActivity.length > 0 ? (
                     recentActivity.map((activity) => (
                       <div key={activity.id} className="flex items-start space-x-3">
-                        <div className="p-2 bg-muted rounded-lg">
-                          <activity.icon className="h-4 w-4" />
+                        <div className="p-2 bg-blue-600 rounded-lg">
+                          <activity.icon className="h-4 w-4 text-white" />
                         </div>
                         <div className="flex-1 space-y-1">
-                          <p className="text-sm font-medium">{activity.title}</p>
-                          <p className="text-xs text-muted-foreground">{activity.description}</p>
-                          <p className="text-xs text-muted-foreground">{activity.time}</p>
+                          <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                          <p className="text-xs text-gray-600">{activity.description}</p>
+                          <p className="text-xs text-gray-500">{activity.time}</p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-muted-foreground">No recent activity</p>
+                    <p className="text-sm text-gray-600">No recent activity</p>
                   )}
                 </div>
               </CardContent>

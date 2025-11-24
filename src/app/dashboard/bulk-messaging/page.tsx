@@ -272,14 +272,14 @@ export default function BulkMessagingPage() {
       <div className="border-b -mx-6 px-6 py-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Bulk Messaging</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl font-semibold text-gray-900">Bulk Messaging</h1>
+            <p className="text-gray-600 mt-1">
               Send personalized messages to multiple contacts at once
             </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm text-muted-foreground">Live</span>
+            <span className="text-sm text-gray-600">Live</span>
           </div>
         </div>
       </div>
@@ -287,43 +287,51 @@ export default function BulkMessagingPage() {
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Total Messages</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <MessageSquare className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{messages.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{messages.length}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Messages Sent</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <CheckCircle className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{messages.filter(m => m.status === 'SENT').length}</div>
+              <div className="text-2xl font-bold text-gray-900">{messages.filter(m => m.status === 'SENT').length}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Scheduled</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Clock className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{messages.filter(m => m.status === 'SCHEDULED').length}</div>
+              <div className="text-2xl font-bold text-gray-900">{messages.filter(m => m.status === 'SCHEDULED').length}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Total Contacts</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Users className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{contacts.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{contacts.length}</div>
             </CardContent>
           </Card>
         </div>
@@ -338,13 +346,15 @@ export default function BulkMessagingPage() {
           <TabsContent value="compose" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Message Composition */}
-              <Card>
+              <Card className="border-blue-200 bg-white">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <MessageSquare className="h-5 w-5 text-white" />
+                    </div>
                     Compose Message
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-600">
                     Create a message and send to multiple contacts
                   </CardDescription>
                 </CardHeader>
@@ -439,13 +449,15 @@ export default function BulkMessagingPage() {
               </Card>
 
               {/* Recipient Selection */}
-              <Card>
+              <Card className="border-blue-200 bg-white">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <Users className="h-5 w-5 text-white" />
+                    </div>
                     Select Recipients
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-600">
                     Choose contacts or broadcast lists to send message to
                   </CardDescription>
                 </CardHeader>

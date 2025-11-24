@@ -202,8 +202,8 @@ export default function ContactsPage() {
       <div className="border-b -mx-6 px-6 py-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Contacts</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl font-semibold text-gray-900">Contacts</h1>
+            <p className="text-gray-600 mt-1">
               Manage your contact list and organize recipients for messaging campaigns
             </p>
           </div>
@@ -225,7 +225,7 @@ export default function ContactsPage() {
             </Button>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
+                <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
                   <Plus className="h-4 w-4" />
                   Add Contact
                 </Button>
@@ -350,48 +350,56 @@ export default function ContactsPage() {
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Total Contacts</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Users className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{contacts.length}</div>
-              <p className="text-xs text-muted-foreground">All contacts in your list</p>
+              <div className="text-2xl font-bold text-gray-900">{contacts.length}</div>
+              <p className="text-xs text-gray-600">All contacts in your list</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Named Contacts</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Named Contacts</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <User className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{contacts.filter(c => c.name).length}</div>
-              <p className="text-xs text-muted-foreground">Contacts with names</p>
+              <div className="text-2xl font-bold text-gray-900">{contacts.filter(c => c.name).length}</div>
+              <p className="text-xs text-gray-600">Contacts with names</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-blue-200 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Labeled Contacts</CardTitle>
-              <Badge className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-900">Labeled Contacts</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Badge className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{contacts.filter(c => c.label).length}</div>
-              <p className="text-xs text-muted-foreground">Organized with labels</p>
+              <div className="text-2xl font-bold text-gray-900">{contacts.filter(c => c.label).length}</div>
+              <p className="text-xs text-gray-600">Organized with labels</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Search and Filter */}
-        <Card>
+        <Card className="border-blue-200 bg-white">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-gray-900">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Search className="h-5 w-5 text-white" />
+              </div>
               Search Contacts
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-600">
               Find contacts by name, phone number, or label
             </CardDescription>
           </CardHeader>

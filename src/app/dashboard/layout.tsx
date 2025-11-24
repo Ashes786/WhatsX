@@ -135,7 +135,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               onClick={() => signOut()}
               className="w-full justify-start group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:p-2"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-6 w-6" />
               <span className="ml-2 group-data-[collapsible=icon]:hidden">Logout</span>
             </Button>
           </div>

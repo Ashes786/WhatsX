@@ -198,7 +198,7 @@ export default function TemplatesPage() {
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4" />
               Add Template
             </Button>
@@ -256,11 +256,11 @@ export default function TemplatesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="border-blue-200 bg-white">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <FileText className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-blue-600 rounded-full">
+                <FileText className="h-6 w-6 text-white" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">{templates.length}</p>
@@ -270,11 +270,11 @@ export default function TemplatesPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-blue-200 bg-white">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-green-100 rounded-full">
-                <ToggleRight className="h-6 w-6 text-green-600" />
+              <div className="p-3 bg-blue-600 rounded-full">
+                <ToggleRight className="h-6 w-6 text-white" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">{templates.filter(t => t.is_active).length}</p>
@@ -284,11 +284,11 @@ export default function TemplatesPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-blue-200 bg-white">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-purple-100 rounded-full">
-                <ToggleLeft className="h-6 w-6 text-purple-600" />
+              <div className="p-3 bg-blue-600 rounded-full">
+                <ToggleLeft className="h-6 w-6 text-white" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">{templates.filter(t => !t.is_active).length}</p>

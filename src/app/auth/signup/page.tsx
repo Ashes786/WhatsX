@@ -160,6 +160,11 @@ export default function SignUp() {
                 Sign in
               </Link>
             </p>
+            <p>
+              <Link href="/" className="text-blue-600 hover:underline">
+                Go to Home
+              </Link>
+            </p>
           </div>
         </CardContent>
       </Card>

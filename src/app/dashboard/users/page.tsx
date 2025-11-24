@@ -282,7 +282,7 @@ export default function UsersPage() {
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogTrigger asChild>
-          <Button className="flex items-center gap-2">
+          <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
             <UserPlus className="h-4 w-4" />
             Add User
           </Button>

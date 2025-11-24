@@ -173,13 +173,15 @@ export default function MessageLogsPage() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="border-blue-200 bg-white">
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Filter className="h-5 w-5 mr-2" />
+          <CardTitle className="flex items-center text-gray-900">
+            <div className="p-2 bg-blue-600 rounded-lg mr-2">
+              <Filter className="h-5 w-5 text-white" />
+            </div>
             Filters
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-600">
             Filter logs by date and {userRole === 'ADMIN' ? 'user' : 'time range'}
           </CardDescription>
         </CardHeader>
@@ -225,11 +227,11 @@ export default function MessageLogsPage() {
             </div>
             
             <div className="flex items-end space-x-2">
-              <Button onClick={applyFilters}>
+              <Button onClick={applyFilters} className="bg-blue-600 hover:bg-blue-700">
                 <Filter className="h-4 w-4 mr-2" />
                 Apply Filters
               </Button>
-              <Button variant="outline" onClick={clearFilters}>
+              <Button variant="outline" onClick={clearFilters} className="border-blue-200 text-blue-700 hover:bg-blue-50">
                 Clear
               </Button>
             </div>
@@ -238,19 +240,21 @@ export default function MessageLogsPage() {
       </Card>
 
       {/* Logs Table */}
-      <Card>
+      <Card className="border-blue-200 bg-white">
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2" />
+              <CardTitle className="flex items-center text-gray-900">
+                <div className="p-2 bg-blue-600 rounded-lg mr-2">
+                  <MessageSquare className="h-5 w-5 text-white" />
+                </div>
                 Delivery Logs
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-600">
                 {logs.length} log{logs.length !== 1 ? 's' : ''} found
               </CardDescription>
             </div>
-            <Button variant="outline" onClick={exportLogs}>
+            <Button variant="outline" onClick={exportLogs} className="border-blue-200 text-gray-900 hover:bg-blue-50">
               <Download className="h-4 w-4 mr-2" />
               Export CSV
             </Button>

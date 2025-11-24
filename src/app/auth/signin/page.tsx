@@ -98,15 +98,14 @@ export default function SignIn() {
                 Sign up
               </Link>
             </p>
+            <p>
+            <Link href="/" className="text-blue-600 hover:underline">
+                Go to Home
+              </Link>
+            </p>
           </div>
           
-            <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-            <h3 className="font-semibold mb-2">Test Accounts:</h3>
-            <div className="space-y-1 text-sm">
-              <p><strong>Admin:</strong> admin@whatsx.com / admin123</p>
-              <p><strong>End User:</strong> operator@whatsx.com / operator123</p>
-            </div>
-          </div>
+          
         </CardContent>
       </Card>
     </div>
