@@ -67,6 +67,20 @@ export default function UsersPage() {
   
   const [formLoading, setFormLoading] = useState(false)
 
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users')
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchUsers()
   }, [])
@@ -91,19 +105,7 @@ export default function UsersPage() {
     )
   }
 
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch('/api/admin/users')
-      if (response.ok) {
-        const data = await response.json()
-        setUsers(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch users:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+
 
   const handleToggleUserStatus = async (userId: string, currentStatus: string) => {
     try {

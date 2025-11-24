@@ -97,7 +97,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <SidebarHeader>
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-2">
-              <FileText className="h-6 w-6 text-primary flex-shrink-0" />
+              <FileText className="h-6 w-6 text-primary flex-shrink-0 group-data-[collapsible=icon]:hidden" />
               <span className="text-lg font-semibold group-data-[collapsible=icon]:hidden">WhatsX</span>
             </div>
             <SidebarTrigger className="h-7 w-7 group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:top-4 group-data-[collapsible=icon]:right-4" />
