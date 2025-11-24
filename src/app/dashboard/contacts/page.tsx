@@ -230,60 +230,59 @@ export default function ContactsPage() {
                   Add Contact
                 </Button>
               </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5" />
-                      Add New Contact
-                    </DialogTitle>
-                    <DialogDescription>
-                      Add a new contact to your contact list
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Name (Optional)</Label>
-                      <Input
-                        id="name"
-                        value={newContact.name}
-                        onChange={(e) => setNewContact(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="John Doe"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone Number *</Label>
-                      <Input
-                        id="phone"
-                        value={newContact.phone}
-                        onChange={(e) => setNewContact(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="+1234567890"
-                        required
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="label">Label (Optional)</Label>
-                      <Input
-                        id="label"
-                        value={newContact.label}
-                        onChange={(e) => setNewContact(prev => ({ ...prev, label: e.target.value }))}
-                        placeholder="Friend, Client, etc."
-                        className="mt-1"
-                      />
-                    </div>
-                    <div className="flex justify-end space-x-2 pt-4">
-                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleAddContact}>
-                        Add Contact
-                      </Button>
-                    </div>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Add New Contact
+                  </DialogTitle>
+                  <DialogDescription>
+                    Add a new contact to your contact list
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Name (Optional)</Label>
+                    <Input
+                      id="name"
+                      value={newContact.name}
+                      onChange={(e) => setNewContact(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="John Doe"
+                      className="mt-1"
+                    />
                   </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+                  <div>
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input
+                      id="phone"
+                      value={newContact.phone}
+                      onChange={(e) => setNewContact(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="+1234567890"
+                      required
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="label">Label (Optional)</Label>
+                    <Input
+                      id="label"
+                      value={newContact.label}
+                      onChange={(e) => setNewContact(prev => ({ ...prev, label: e.target.value }))}
+                      placeholder="Friend, Client, etc."
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddContact}>
+                      Add Contact
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
