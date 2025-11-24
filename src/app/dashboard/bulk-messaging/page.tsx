@@ -20,12 +20,7 @@ import {
   CheckCircle,
   Plus,
   Users,
-  Calendar,
-  Paperclip,
-  X,
-  Image as ImageIcon,
-  File,
-  Video
+  Calendar
 } from 'lucide-react'
 
 interface Template {
@@ -66,20 +61,6 @@ interface Message {
     }
     status: string
   }>
-  mediaAttachments?: Array<{
-    id: string
-    fileUrl: string
-    fileType: string
-    sizeKb: number
-  }>
-}
-
-interface UploadedFile {
-  filename: string
-  originalName: string
-  size: number
-  type: string
-  url: string
 }
 
 export default function BulkMessagingPage() {
@@ -96,8 +77,6 @@ export default function BulkMessagingPage() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [activeTab, setActiveTab] = useState('compose')
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-  const [uploadingFile, setUploadingFile] = useState(false)
   
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
   const [templateForm, setTemplateForm] = useState({
@@ -163,59 +142,6 @@ export default function BulkMessagingPage() {
     }
   }
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    setUploadingFile(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (response.ok) {
-        const fileInfo: UploadedFile = await response.json()
-        setUploadedFiles(prev => [...prev, fileInfo])
-      } else {
-        const error = await response.json()
-        alert(`Upload failed: ${error.error}`)
-      }
-    } catch (error) {
-      console.error('Failed to upload file:', error)
-      alert('Upload failed. Please try again.')
-    } finally {
-      setUploadingFile(false)
-      // Reset the file input
-      event.target.value = ''
-    }
-  }
-
-  const removeFile = (filename: string) => {
-    setUploadedFiles(prev => prev.filter(file => file.filename !== filename))
-  }
-
-  const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) {
-      return <ImageIcon className="h-4 w-4" />
-    } else if (fileType.startsWith('video/')) {
-      return <Video className="h-4 w-4" />
-    } else {
-      return <File className="h-4 w-4" />
-    }
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
-
   const handleSendMessage = async (isScheduled = false) => {
     if (!messageContent.trim() || (selectedContacts.length === 0 && !selectedBroadcastList)) {
       alert('Please enter message content and select recipients')
@@ -224,12 +150,6 @@ export default function BulkMessagingPage() {
 
     setSending(true)
     try {
-      const mediaAttachments = uploadedFiles.map(file => ({
-        fileUrl: file.url,
-        fileType: file.type,
-        sizeKb: Math.round(file.size / 1024)
-      }))
-
       const response = await fetch('/api/bulk-messages', {
         method: 'POST',
         headers: {
@@ -241,8 +161,7 @@ export default function BulkMessagingPage() {
           broadcastListId: selectedBroadcastList || undefined,
           scheduledAt: isScheduled && scheduledAt ? scheduledAt : undefined,
           templateId: selectedTemplate || null,
-          templateVariables: selectedTemplate ? { name: 'Customer' } : undefined,
-          mediaAttachments: mediaAttachments.length > 0 ? mediaAttachments : undefined
+          templateVariables: selectedTemplate ? { name: 'Customer' } : undefined
         }),
       })
 
@@ -253,7 +172,6 @@ export default function BulkMessagingPage() {
         setSelectedBroadcastList('')
         setSelectedTemplate('')
         setScheduledAt('')
-        setUploadedFiles([])
         await fetchMessages()
         
         const message = isScheduled 
@@ -262,8 +180,21 @@ export default function BulkMessagingPage() {
         
         alert(message)
       } else {
-        const error = await response.json()
-        alert(`Failed to send message: ${error.error}`)
+        // Handle error response safely
+        let errorMessage = 'Failed to send message'
+        try {
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            const error = await response.json()
+            errorMessage = `Failed to send message: ${error.error || error.message || 'Unknown error'}`
+          } else {
+            const errorText = await response.text()
+            errorMessage = `Failed to send message: ${errorText || response.statusText}`
+          }
+        } catch (parseError) {
+          errorMessage = `Failed to send message: ${response.statusText || 'Server error'}`
+        }
+        alert(errorMessage)
       }
     } catch (error) {
       console.error('Failed to send message:', error)
@@ -300,8 +231,21 @@ export default function BulkMessagingPage() {
         setTemplateForm({ title: '', content: '' })
         alert('Template created successfully!')
       } else {
-        const error = await response.json()
-        alert(`Failed to create template: ${error.error}`)
+        // Handle error response safely
+        let errorMessage = 'Failed to create template'
+        try {
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            const error = await response.json()
+            errorMessage = `Failed to create template: ${error.error || error.message || 'Unknown error'}`
+          } else {
+            const errorText = await response.text()
+            errorMessage = `Failed to create template: ${errorText || response.statusText}`
+          }
+        } catch (parseError) {
+          errorMessage = `Failed to create template: ${response.statusText || 'Server error'}`
+        }
+        alert(errorMessage)
       }
     } catch (error) {
       console.error('Failed to create template:', error)
@@ -356,7 +300,7 @@ export default function BulkMessagingPage() {
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Bulk Messaging</h1>
             <p className="text-gray-600 mt-1">
-              Send personalized messages with attachments to multiple contacts at once
+              Send personalized messages to multiple contacts at once
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -494,60 +438,6 @@ export default function BulkMessagingPage() {
                     </p>
                   </div>
 
-                  {/* File Attachments */}
-                  <div>
-                    <Label htmlFor="file-upload">Attachments (Optional)</Label>
-                    <div className="mt-2">
-                      <input
-                        id="file-upload"
-                        type="file"
-                        onChange={handleFileUpload}
-                        disabled={uploadingFile}
-                        className="hidden"
-                        accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => document.getElementById('file-upload')?.click()}
-                        disabled={uploadingFile}
-                        className="w-full"
-                      >
-                        <Paperclip className="h-4 w-4 mr-2" />
-                        {uploadingFile ? 'Uploading...' : 'Attach File'}
-                      </Button>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Supported: Images, Videos, PDFs, Documents (Max 10MB)
-                      </p>
-                    </div>
-
-                    {/* Uploaded Files */}
-                    {uploadedFiles.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        <Label>Attached Files:</Label>
-                        {uploadedFiles.map((file) => (
-                          <div key={file.filename} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-                            <div className="flex items-center gap-2">
-                              {getFileIcon(file.type)}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{file.originalName}</p>
-                                <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeFile(file.filename)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
                   <div>
                     <Label htmlFor="schedule">Schedule (Optional)</Label>
                     <Input
@@ -573,17 +463,18 @@ export default function BulkMessagingPage() {
                     </Button>
                     <Button 
                       onClick={() => handleSendMessage(true)}
-                      disabled={!messageContent.trim() || getSelectedRecipientCount() === 0 || sending}
+                      disabled={!messageContent.trim() || getSelectedRecipientCount() === 0 || sending || !scheduledAt}
                       variant="outline"
+                      className="flex-1"
                     >
                       <Calendar className="h-4 w-4 mr-2" />
-                      Schedule
+                      {sending ? 'Scheduling...' : 'Schedule'}
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Recipients Selection */}
+              {/* Recipient Selection */}
               <Card className="border-blue-200 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-gray-900">
@@ -593,7 +484,7 @@ export default function BulkMessagingPage() {
                     Select Recipients
                   </CardTitle>
                   <CardDescription className="text-gray-600">
-                    Choose contacts or broadcast lists to send the message to
+                    Choose contacts or broadcast lists to send message to
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -606,83 +497,48 @@ export default function BulkMessagingPage() {
                       <SelectContent>
                         {broadcastLists.map((list) => (
                           <SelectItem key={list.id} value={list.id}>
-                            <div className="flex flex-col">
-                              <span>{list.title}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {list.broadcastContacts.length} contacts
-                              </span>
-                            </div>
+                            {list.title} ({list.broadcastContacts.length} contacts)
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div className="text-center text-sm text-muted-foreground">
-                    OR
-                  </div>
-
                   <div>
                     <Label>Individual Contacts</Label>
-                    <div className="mt-2 max-h-60 overflow-y-auto border rounded-md p-3">
-                      {contacts.length > 0 ? (
-                        <div className="space-y-2">
-                          {contacts.map((contact) => (
-                            <div key={contact.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`contact-${contact.id}`}
-                                checked={selectedContacts.includes(contact.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedContacts(prev => [...prev, contact.id])
-                                  } else {
-                                    setSelectedContacts(prev => 
-                                      prev.filter(id => id !== contact.id)
-                                    )
-                                  }
-                                }}
-                                disabled={selectedBroadcastList !== ''}
-                              />
-                              <Label 
-                                htmlFor={`contact-${contact.id}`}
-                                className="flex-1 cursor-pointer"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span>
-                                    {contact.name || 'No name'} - {contact.phoneNumber}
-                                  </span>
-                                  {contact.label && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      {contact.label}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </Label>
-                            </div>
-                          ))}
+                    <div className="mt-2 space-y-2 max-h-48 overflow-y-auto border rounded-md p-2">
+                      {contacts.map((contact) => (
+                        <div key={contact.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={contact.id}
+                            checked={selectedContacts.includes(contact.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedContacts([...selectedContacts, contact.id])
+                              } else {
+                                setSelectedContacts(selectedContacts.filter(id => id !== contact.id))
+                              }
+                            }}
+                          />
+                          <Label htmlFor={contact.id} className="text-sm">
+                            {contact.name || contact.phoneNumber}
+                          </Label>
                         </div>
-                      ) : (
-                        <p className="text-muted-foreground text-center py-4">
-                          No contacts available
-                        </p>
-                      )}
+                      ))}
                     </div>
                   </div>
 
-                  <div className="p-3 bg-blue-50 rounded-md">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-900">
-                        {getSelectedRecipientCount()} recipient{getSelectedRecipientCount() !== 1 ? 's' : ''} selected
-                      </span>
-                    </div>
+                  <div className="p-3 bg-muted rounded-md">
+                    <p className="text-sm font-medium">
+                      Selected Recipients: {getSelectedRecipientCount()}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          <TabsContent value="scheduled" className="space-y-6">
+          <TabsContent value="scheduled" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Scheduled Messages</CardTitle>
@@ -691,90 +547,71 @@ export default function BulkMessagingPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {messages.filter(m => m.status === 'SCHEDULED').length > 0 ? (
-                  <div className="space-y-4">
-                    {messages.filter(m => m.status === 'SCHEDULED').map((message) => (
-                      <div key={message.id} className="border rounded-md p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-900 mb-1">{message.content}</p>
-                            {message.mediaAttachments && message.mediaAttachments.length > 0 && (
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Paperclip className="h-3 w-3" />
-                                {message.mediaAttachments.length} file{message.mediaAttachments.length !== 1 ? 's' : ''} attached
-                              </div>
-                            )}
-                          </div>
-                          {getStatusBadge(message.status)}
+                <div className="space-y-4">
+                  {messages.filter(m => m.status === 'SCHEDULED').map((message) => (
+                    <div key={message.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium">{message.content}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Scheduled for: {message.scheduledAt ? new Date(message.scheduledAt).toLocaleString() : 'N/A'}
+                          </p>
                         </div>
-                        <div className="flex justify-between items-center text-xs text-muted-foreground">
-                          <span>Scheduled for: {message.scheduledAt ? new Date(message.scheduledAt).toLocaleString() : 'N/A'}</span>
-                          <span>{message.deliveryLogs.length} recipients</span>
-                        </div>
+                        {getStatusBadge(message.status)}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No scheduled messages</h3>
-                    <p className="text-muted-foreground">
-                      Schedule messages to see them here
+                    </div>
+                  ))}
+                  {messages.filter(m => m.status === 'SCHEDULED').length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No scheduled messages
                     </p>
-                  </div>
-                )}
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-6">
+          <TabsContent value="history" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Message History</CardTitle>
                 <CardDescription>
-                  View all sent messages and their delivery status
+                  All messages sent through the platform
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {messages.filter(m => m.status === 'SENT').length > 0 ? (
-                  <div className="space-y-4">
-                    {messages.filter(m => m.status === 'SENT').map((message) => (
-                      <div key={message.id} className="border rounded-md p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-900 mb-1">{message.content}</p>
-                            {message.mediaAttachments && message.mediaAttachments.length > 0 && (
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Paperclip className="h-3 w-3" />
-                                {message.mediaAttachments.length} file{message.mediaAttachments.length !== 1 ? 's' : ''} attached
-                              </div>
-                            )}
-                          </div>
-                          {getStatusBadge(message.status)}
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <div key={message.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium">{message.content}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Sent: {new Date(message.createdAt).toLocaleString()}
+                          </p>
+                          {message.deliveryLogs && (
+                            <p className="text-sm text-muted-foreground">
+                              Delivered to: {message.deliveryLogs.length} contacts
+                            </p>
+                          )}
                         </div>
-                        <div className="flex justify-between items-center text-xs text-muted-foreground">
-                          <span>Sent: {new Date(message.createdAt).toLocaleString()}</span>
-                          <span>{message.deliveryLogs.length} recipients</span>
-                        </div>
+                        {getStatusBadge(message.status)}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No message history</h3>
-                    <p className="text-muted-foreground">
-                      Send messages to see them here
+                    </div>
+                  ))}
+                  {messages.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No messages sent yet
                     </p>
-                  </div>
-                )}
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Create Template Dialog */}
+      {/* Template Creation Dialog */}
       <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -793,7 +630,7 @@ export default function BulkMessagingPage() {
                 id="template-title"
                 value={templateForm.title}
                 onChange={(e) => setTemplateForm(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Welcome Message"
+                placeholder="Template title"
                 required
               />
             </div>
@@ -803,13 +640,10 @@ export default function BulkMessagingPage() {
                 id="template-content"
                 value={templateForm.content}
                 onChange={(e) => setTemplateForm(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="Hello {name}, welcome to our service!"
+                placeholder="Template content"
                 rows={4}
                 required
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Use {'{variable}'} for placeholders
-              </p>
             </div>
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>

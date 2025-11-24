@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/session-utils'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const currentUser = await getCurrentUser()
     
-    if (!session) {
+    if (!currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -20,13 +19,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // Validate file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024 // 10MB
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024
     if (file.size > maxSize) {
       return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 })
     }
 
-    // Validate file type
+    // Check file type
     const allowedTypes = [
       'image/jpeg',
       'image/png', 
@@ -37,16 +36,11 @@ export async function POST(request: NextRequest) {
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'video/mp4',
-      'video/3gpp',
-      'video/quicktime'
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ]
 
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ 
-        error: 'File type not supported. Supported types: images, PDFs, documents, and videos' 
-      }, { status: 400 })
+      return NextResponse.json({ error: 'File type not allowed' }, { status: 400 })
     }
 
     // Create uploads directory if it doesn't exist
@@ -62,21 +56,20 @@ export async function POST(request: NextRequest) {
     const uniqueFilename = `${uuidv4()}.${fileExtension}`
     const filePath = join(uploadsDir, uniqueFilename)
 
-    // Convert file to buffer and save
+    // Write file to disk
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     await writeFile(filePath, buffer)
 
     // Return file info
-    const fileInfo = {
-      filename: uniqueFilename,
+    return NextResponse.json({
+      id: uuidv4(),
+      fileUrl: `/uploads/${uniqueFilename}`,
       originalName: file.name,
-      size: file.size,
-      type: file.type,
-      url: `/uploads/${uniqueFilename}`
-    }
+      fileType: file.type,
+      sizeKb: Math.round(file.size / 1024)
+    })
 
-    return NextResponse.json(fileInfo)
   } catch (error) {
     console.error('Error uploading file:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

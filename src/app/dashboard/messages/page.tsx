@@ -17,7 +17,11 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Plus
+  Plus,
+  Paperclip,
+  Image as ImageIcon,
+  File,
+  Trash2
 } from 'lucide-react'
 
 interface Template {
@@ -48,6 +52,13 @@ interface Contact {
   label: string
 }
 
+interface MediaAttachment {
+  id: string
+  fileUrl: string
+  fileType: string
+  sizeKb: number
+}
+
 export default function MessagesPage() {
   const { data: session } = useSession()
   const [templates, setTemplates] = useState<Template[]>([])
@@ -56,7 +67,9 @@ export default function MessagesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const [messageContent, setMessageContent] = useState('')
   const [selectedContacts, setSelectedContacts] = useState<string[]>([])
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
 
   useEffect(() => {
     fetchTemplates()
@@ -102,13 +115,89 @@ export default function MessagesPage() {
     }
   }
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      const newFiles = Array.from(files)
+      // Check file size (max 10MB per file)
+      const maxSize = 10 * 1024 * 1024
+      const oversizedFiles = newFiles.filter(file => file.size > maxSize)
+      
+      if (oversizedFiles.length > 0) {
+        alert(`Files larger than 10MB are not allowed. The following files are too big: ${oversizedFiles.map(f => f.name).join(', ')}`)
+        return
+      }
+      
+      setAttachedFiles(prev => [...prev, ...newFiles])
+    }
+    // Reset the input
+    event.target.value = ''
+  }
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith('image/')) {
+      return <ImageIcon className="h-4 w-4" />
+    }
+    return <File className="h-4 w-4" />
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const uploadFiles = async (files: File[]): Promise<MediaAttachment[]> => {
+    const attachments: MediaAttachment[] = []
+    
+    for (const file of files) {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        })
+        
+        if (response.ok) {
+          const result = await response.json()
+          attachments.push({
+            id: result.id,
+            fileUrl: result.fileUrl,
+            fileType: file.type,
+            sizeKb: Math.round(file.size / 1024)
+          })
+        }
+      } catch (error) {
+        console.error('Failed to upload file:', file.name, error)
+      }
+    }
+    
+    return attachments
+  }
+
   const handleSendMessage = async () => {
     if (!messageContent.trim() || selectedContacts.length === 0) {
       alert('Please enter message content and select at least one contact')
       return
     }
 
+    setSending(true)
     try {
+      let mediaAttachments: MediaAttachment[] = []
+      
+      // Upload files if any
+      if (attachedFiles.length > 0) {
+        mediaAttachments = await uploadFiles(attachedFiles)
+      }
+
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
@@ -117,7 +206,8 @@ export default function MessagesPage() {
         body: JSON.stringify({
           content: messageContent,
           contactIds: selectedContacts,
-          templateId: selectedTemplate || null
+          templateId: selectedTemplate || null,
+          mediaAttachments: mediaAttachments.length > 0 ? mediaAttachments : undefined
         }),
       })
 
@@ -125,6 +215,7 @@ export default function MessagesPage() {
         setMessageContent('')
         setSelectedContacts([])
         setSelectedTemplate('')
+        setAttachedFiles([])
         await fetchMessages()
         alert('Message sent successfully!')
       } else {
@@ -134,6 +225,8 @@ export default function MessagesPage() {
     } catch (error) {
       console.error('Failed to send message:', error)
       alert('Failed to send message. Please try again.')
+    } finally {
+      setSending(false)
     }
   }
 
@@ -275,6 +368,61 @@ export default function MessagesPage() {
               </p>
             </div>
 
+            {/* File Attachments */}
+            <div>
+              <Label htmlFor="attachments">Attachments</Label>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    id="attachments"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('attachments')?.click()}
+                    className="flex items-center gap-2"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    Attach Files
+                  </Button>
+                  <span className="text-sm text-gray-500">
+                    Max 10MB per file. Images, PDFs, and documents allowed.
+                  </span>
+                </div>
+                
+                {attachedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    {attachedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          {getFileIcon(file)}
+                          <div>
+                            <p className="text-sm font-medium">{file.name}</p>
+                            <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="contacts">Select Contacts</Label>
               <div className="max-h-40 overflow-y-auto border rounded-md p-3 space-y-2">
@@ -309,11 +457,11 @@ export default function MessagesPage() {
 
             <Button 
               onClick={handleSendMessage}
-              disabled={!messageContent.trim() || selectedContacts.length === 0}
+              disabled={!messageContent.trim() || selectedContacts.length === 0 || sending}
               className="w-full"
             >
               <Send className="h-4 w-4 mr-2" />
-              Send Message
+              {sending ? 'Sending...' : 'Send Message'}
             </Button>
           </CardContent>
         </Card>

@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
 import { 
   Users, 
@@ -20,7 +19,7 @@ import {
   Phone,
   User,
   Upload,
-  RadioGroup,
+  Radio,
   List
 } from 'lucide-react'
 
@@ -48,23 +47,20 @@ export default function ContactsPage() {
   const [broadcastLists, setBroadcastLists] = useState<BroadcastList[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [activeTab, setActiveTab] = useState('contacts')
-  
-  // Contact management states
-  const [isAddContactDialogOpen, setIsAddContactDialogOpen] = useState(false)
-  const [isEditContactDialogOpen, setIsEditContactDialogOpen] = useState(false)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isBroadcastDialogOpen, setIsBroadcastDialogOpen] = useState(false)
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
+  const [selectedContactsForBroadcast, setSelectedContactsForBroadcast] = useState<string[]>([])
   const [newContact, setNewContact] = useState({
     name: '',
     phone: '',
     label: ''
   })
-
-  // Broadcast list management states
-  const [isCreateBroadcastDialogOpen, setIsCreateBroadcastDialogOpen] = useState(false)
-  const [selectedContactsForBroadcast, setSelectedContactsForBroadcast] = useState<string[]>([])
-  const [newBroadcastTitle, setNewBroadcastTitle] = useState('')
-  const [creatingBroadcast, setCreatingBroadcast] = useState(false)
+  const [newBroadcastList, setNewBroadcastList] = useState({
+    title: '',
+    contactIds: [] as string[]
+  })
 
   useEffect(() => {
     fetchContacts()
@@ -114,7 +110,7 @@ export default function ContactsPage() {
       if (response.ok) {
         await fetchContacts()
         setNewContact({ name: '', phone: '', label: '' })
-        setIsAddContactDialogOpen(false)
+        setIsAddDialogOpen(false)
       } else {
         const error = await response.json()
         alert(`Failed to add contact: ${error.error}`)
@@ -159,7 +155,7 @@ export default function ContactsPage() {
       phone: contact.raw_phone,
       label: contact.label || ''
     })
-    setIsEditContactDialogOpen(true)
+    setIsEditDialogOpen(true)
   }
 
   const handleUpdateContact = async () => {
@@ -180,7 +176,7 @@ export default function ContactsPage() {
 
       if (response.ok) {
         await fetchContacts()
-        setIsEditContactDialogOpen(false)
+        setIsEditDialogOpen(false)
         setSelectedContact(null)
         setNewContact({ name: '', phone: '', label: '' })
       } else {
@@ -205,7 +201,6 @@ export default function ContactsPage() {
 
       if (response.ok) {
         await fetchContacts()
-        await fetchBroadcastLists()
       } else {
         const error = await response.json()
         alert(`Failed to delete contact: ${error.error}`)
@@ -217,12 +212,11 @@ export default function ContactsPage() {
   }
 
   const handleCreateBroadcastList = async () => {
-    if (!newBroadcastTitle.trim() || selectedContactsForBroadcast.length === 0) {
+    if (!newBroadcastList.title.trim() || newBroadcastList.contactIds.length === 0) {
       alert('Please enter a title and select at least one contact')
       return
     }
 
-    setCreatingBroadcast(true)
     try {
       const response = await fetch('/api/broadcasts', {
         method: 'POST',
@@ -230,16 +224,16 @@ export default function ContactsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          title: newBroadcastTitle,
-          contactIds: selectedContactsForBroadcast
+          title: newBroadcastList.title,
+          contactIds: newBroadcastList.contactIds
         }),
       })
 
       if (response.ok) {
         await fetchBroadcastLists()
-        setNewBroadcastTitle('')
+        setNewBroadcastList({ title: '', contactIds: [] })
         setSelectedContactsForBroadcast([])
-        setIsCreateBroadcastDialogOpen(false)
+        setIsBroadcastDialogOpen(false)
         alert('Broadcast list created successfully!')
       } else {
         const error = await response.json()
@@ -248,13 +242,11 @@ export default function ContactsPage() {
     } catch (error) {
       console.error('Failed to create broadcast list:', error)
       alert('Failed to create broadcast list. Please try again.')
-    } finally {
-      setCreatingBroadcast(false)
     }
   }
 
   const handleDeleteBroadcastList = async (broadcastList: BroadcastList) => {
-    if (!confirm(`Are you sure you want to delete "${broadcastList.title}"?`)) {
+    if (!confirm(`Are you sure you want to delete the broadcast list "${broadcastList.title}"?`)) {
       return
     }
 
@@ -298,9 +290,9 @@ export default function ContactsPage() {
       <div className="border-b -mx-6 px-6 py-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Contacts Management</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Contacts</h1>
             <p className="text-gray-600 mt-1">
-              Manage your contacts and create broadcast lists for messaging campaigns
+              Manage your contact list and organize recipients for messaging campaigns
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -319,7 +311,87 @@ export default function ContactsPage() {
               <Upload className="h-4 w-4" />
               Upload CSV
             </Button>
-            <Dialog open={isAddContactDialogOpen} onOpenChange={setIsAddContactDialogOpen}>
+            <Dialog open={isBroadcastDialogOpen} onOpenChange={setIsBroadcastDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Radio className="h-4 w-4" />
+                  Create Broadcast List
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Radio className="h-5 w-5" />
+                    Create Broadcast List
+                  </DialogTitle>
+                  <DialogDescription>
+                    Group contacts for bulk messaging
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="broadcast-title">List Title</Label>
+                    <Input
+                      id="broadcast-title"
+                      value={newBroadcastList.title}
+                      onChange={(e) => setNewBroadcastList(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="e.g., VIP Customers, Team Members"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Select Contacts</Label>
+                    <div className="max-h-60 overflow-y-auto border rounded-md p-3 space-y-2 mt-1">
+                      {contacts.length > 0 ? (
+                        contacts.map((contact) => (
+                          <div key={contact.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`broadcast-${contact.id}`}
+                              checked={newBroadcastList.contactIds.includes(contact.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setNewBroadcastList(prev => ({
+                                    ...prev,
+                                    contactIds: [...prev.contactIds, contact.id]
+                                  }))
+                                } else {
+                                  setNewBroadcastList(prev => ({
+                                    ...prev,
+                                    contactIds: prev.contactIds.filter(id => id !== contact.id)
+                                  }))
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`broadcast-${contact.id}`} className="text-sm font-medium cursor-pointer">
+                              {contact.name || contact.raw_phone}
+                              {contact.name && <span className="text-gray-500 ml-1">({contact.raw_phone})</span>}
+                              {contact.label && <span className="text-gray-500 ml-1">- {contact.label}</span>}
+                            </Label>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-sm">No contacts available. Add contacts first.</p>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {newBroadcastList.contactIds.length} contact{newBroadcastList.contactIds.length !== 1 ? 's' : ''} selected
+                    </p>
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline" onClick={() => {
+                      setIsBroadcastDialogOpen(false)
+                      setNewBroadcastList({ title: '', contactIds: [] })
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateBroadcastList}>
+                      Create List
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
                   <Plus className="h-4 w-4" />
@@ -369,7 +441,7 @@ export default function ContactsPage() {
                     />
                   </div>
                   <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline" onClick={() => setIsAddContactDialogOpen(false)}>
+                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
                     </Button>
                     <Button onClick={handleAddContact}>
@@ -383,336 +455,8 @@ export default function ContactsPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="contacts">Contacts</TabsTrigger>
-          <TabsTrigger value="broadcasts">Broadcast Lists</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="contacts" className="space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-blue-200 bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900">Total Contacts</CardTitle>
-                <div className="p-2 bg-blue-600 rounded-lg">
-                  <Users className="h-4 w-4 text-white" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{contacts.length}</div>
-                <p className="text-xs text-gray-600">All contacts in your list</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-blue-200 bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900">Named Contacts</CardTitle>
-                <div className="p-2 bg-blue-600 rounded-lg">
-                  <User className="h-4 w-4 text-white" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{contacts.filter(c => c.name).length}</div>
-                <p className="text-xs text-gray-600">Contacts with names</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-blue-200 bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900">Broadcast Lists</CardTitle>
-                <div className="p-2 bg-blue-600 rounded-lg">
-                  <List className="h-4 w-4 text-white" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{broadcastLists.length}</div>
-                <p className="text-xs text-gray-600">Lists created</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Search and Filter */}
-          <Card className="border-blue-200 bg-white">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-900">
-                <div className="p-2 bg-blue-600 rounded-lg">
-                  <Search className="h-5 w-5 text-white" />
-                </div>
-                Search Contacts
-              </CardTitle>
-              <CardDescription className="text-gray-600">
-                Find contacts by name, phone number, or label
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search contacts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Contacts Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Contacts List</CardTitle>
-              <CardDescription>
-                {filteredContacts.length} {filteredContacts.length === 1 ? 'contact' : 'contacts'} found
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Phone Number</TableHead>
-                      <TableHead>Label</TableHead>
-                      <TableHead>Added Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredContacts.length > 0 ? (
-                      filteredContacts.map((contact) => (
-                        <TableRow key={contact.id}>
-                          <TableCell className="font-medium">
-                            {contact.name || (
-                              <span className="text-muted-foreground">No name</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-muted-foreground" />
-                              <span>{contact.raw_phone}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {contact.label ? (
-                              <Badge variant="secondary">{contact.label}</Badge>
-                            ) : (
-                              <span className="text-muted-foreground">No label</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(contact.added_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEditContact(contact)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteContact(contact)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
-                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                            <Users className="h-8 w-8" />
-                            <p>No contacts found</p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="broadcasts" className="space-y-6">
-          {/* Broadcast Lists Header */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Broadcast Lists</h2>
-              <p className="text-gray-600 mt-1">Create and manage contact groups for bulk messaging</p>
-            </div>
-            <Dialog open={isCreateBroadcastDialogOpen} onOpenChange={setIsCreateBroadcastDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
-                  <Plus className="h-4 w-4" />
-                  Create Broadcast List
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <List className="h-5 w-5" />
-                    Create Broadcast List
-                  </DialogTitle>
-                  <DialogDescription>
-                    Create a new broadcast list by selecting contacts
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="broadcast-title">List Title *</Label>
-                    <Input
-                      id="broadcast-title"
-                      value={newBroadcastTitle}
-                      onChange={(e) => setNewBroadcastTitle(e.target.value)}
-                      placeholder="e.g., VIP Customers, Team Members"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label>Select Contacts *</Label>
-                    <div className="mt-2 max-h-60 overflow-y-auto border rounded-md p-3">
-                      {contacts.length > 0 ? (
-                        <div className="space-y-2">
-                          {contacts.map((contact) => (
-                            <div key={contact.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`contact-${contact.id}`}
-                                checked={selectedContactsForBroadcast.includes(contact.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedContactsForBroadcast(prev => [...prev, contact.id])
-                                  } else {
-                                    setSelectedContactsForBroadcast(prev => 
-                                      prev.filter(id => id !== contact.id)
-                                    )
-                                  }
-                                }}
-                              />
-                              <Label 
-                                htmlFor={`contact-${contact.id}`}
-                                className="flex-1 cursor-pointer"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span>
-                                    {contact.name || 'No name'} - {contact.raw_phone}
-                                  </span>
-                                  {contact.label && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      {contact.label}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground text-center py-4">
-                          No contacts available. Add some contacts first.
-                        </p>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {selectedContactsForBroadcast.length} contact{selectedContactsForBroadcast.length !== 1 ? 's' : ''} selected
-                    </p>
-                  </div>
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline" onClick={() => {
-                      setIsCreateBroadcastDialogOpen(false)
-                      setNewBroadcastTitle('')
-                      setSelectedContactsForBroadcast([])
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={handleCreateBroadcastList}
-                      disabled={!newBroadcastTitle.trim() || selectedContactsForBroadcast.length === 0 || creatingBroadcast}
-                    >
-                      {creatingBroadcast ? 'Creating...' : 'Create List'}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* Broadcast Lists Grid */}
-          {broadcastLists.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {broadcastLists.map((broadcastList) => (
-                <Card key={broadcastList.id} className="border-blue-200 bg-white">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">{broadcastList.title}</CardTitle>
-                        <CardDescription>
-                          {broadcastList.broadcastContacts.length} contact{broadcastList.broadcastContacts.length !== 1 ? 's' : ''}
-                        </CardDescription>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteBroadcastList(broadcastList)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium text-gray-900">Contacts:</div>
-                      <div className="max-h-32 overflow-y-auto space-y-1">
-                        {broadcastList.broadcastContacts.map((bc) => (
-                          <div key={bc.contact.id} className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">
-                              {bc.contact.name || 'No name'}
-                            </span>
-                            <span className="text-muted-foreground text-xs">
-                              {bc.contact.raw_phone}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="mt-4 pt-4 border-t text-xs text-muted-foreground">
-                      Created: {new Date(broadcastList.createdAt).toLocaleDateString()}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <List className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No broadcast lists yet</h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  Create your first broadcast list to organize contacts for bulk messaging
-                </p>
-                <Button 
-                  onClick={() => setIsCreateBroadcastDialogOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Broadcast List
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
-
       {/* Edit Contact Dialog */}
-      <Dialog open={isEditContactDialogOpen} onOpenChange={setIsEditContactDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -757,7 +501,7 @@ export default function ContactsPage() {
             </div>
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={() => {
-                setIsEditContactDialogOpen(false)
+                setIsEditDialogOpen(false)
                 setSelectedContact(null)
                 setNewContact({ name: '', phone: '', label: '' })
               }}>
@@ -770,6 +514,216 @@ export default function ContactsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-blue-200 bg-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-900">Total Contacts</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Users className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">{contacts.length}</div>
+              <p className="text-xs text-gray-600">All contacts in your list</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-blue-200 bg-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-900">Named Contacts</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <User className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">{contacts.filter(c => c.name).length}</div>
+              <p className="text-xs text-gray-600">Contacts with names</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-blue-200 bg-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-900">Labeled Contacts</CardTitle>
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Badge className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">{contacts.filter(c => c.label).length}</div>
+              <p className="text-xs text-gray-600">Organized with labels</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Broadcast Lists */}
+        <Card className="border-blue-200 bg-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-gray-900">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Radio className="h-5 w-5 text-white" />
+              </div>
+              Broadcast Lists
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Manage your contact groups for bulk messaging
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {broadcastLists.length > 0 ? (
+              <div className="space-y-3">
+                {broadcastLists.map((list) => (
+                  <div key={list.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <List className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">{list.title}</h4>
+                        <p className="text-sm text-gray-600">
+                          {list.broadcastContacts.length} contact{list.broadcastContacts.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {list.broadcastContacts.length} members
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteBroadcastList(list)}
+                        className="text-red-600 hover:text-red-700 hover:border-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Radio className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">No broadcast lists created yet</p>
+                <p className="text-sm text-gray-400">Create your first broadcast list to organize contacts</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Search and Filter */}
+        <Card className="border-blue-200 bg-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-gray-900">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Search className="h-5 w-5 text-white" />
+              </div>
+              Search Contacts
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Find contacts by name, phone number, or label
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search contacts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Contacts Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Contacts List</CardTitle>
+            <CardDescription>
+              {filteredContacts.length} {filteredContacts.length === 1 ? 'contact' : 'contacts'} found
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Phone Number</TableHead>
+                    <TableHead>Label</TableHead>
+                    <TableHead>Added Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredContacts.length > 0 ? (
+                    filteredContacts.map((contact) => (
+                      <TableRow key={contact.id}>
+                        <TableCell className="font-medium">
+                          {contact.name || (
+                            <span className="text-muted-foreground">No name</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            {contact.raw_phone}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {contact.label ? (
+                            <Badge variant="secondary">{contact.label}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">No label</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(contact.added_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditContact(contact)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteContact(contact)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <Users className="h-8 w-8 text-muted-foreground" />
+                          <p className="text-muted-foreground">No contacts found</p>
+                          <p className="text-sm text-muted-foreground">
+                            {searchTerm ? 'Try adjusting your search terms' : 'Add your first contact to get started'}
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
