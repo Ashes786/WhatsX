@@ -4,16 +4,17 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { normalizePhoneNumber, dedupeRecipients, generateMessagePreview } from '@/lib/phone-utils'
 import { prepareToSendSchema, handleApiError, createSuccessResponse, AppError } from '@/lib/validation'
+import { WhatsAppAPI } from '@/lib/whatsapp'
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       throw new AppError('Unauthorized - Please login again', 401)
     }
 
-    // Get recent messages for the current user
+    // Get recent messages for current user
     const messages = await db.message.findMany({
       where: {
         userId: session.user.id
@@ -55,13 +56,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       throw new AppError('Unauthorized - Please login again', 401)
     }
 
     const body = await request.json()
-    
+
     // Validate input
     const validatedData = prepareToSendSchema.parse(body)
     const { template_id, message_override, recipients_raw, default_country_code } = validatedData
@@ -104,7 +105,8 @@ export async function POST(request: NextRequest) {
     // Generate message preview
     const messagePreview = message_override || templateContent || 'Default message'
 
-    // Create messages for each recipient
+    // Send messages to each recipient immediately
+    const results = []
     for (const recipient of dedupeResult.recipients_final) {
       // Find or create contact
       let contact = await db.contact.findFirst({
@@ -124,22 +126,83 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Create message
-      await db.message.create({
-        data: {
-          userId: session.user.id,
-          contactId: contact.id,
-          templateId: template_id || null,
-          content: messagePreview,
-          status: 'PENDING'
-        }
-      })
+      // Send message via WAWP
+      try {
+        console.log(`📤 Sending message to ${recipient}: ${messagePreview}`)
+        const whatsappResult = await WhatsAppAPI.sendMessage(recipient, messagePreview)
+
+        console.log(`✅ WAWP Result:`, whatsappResult)
+
+        // Create message record
+        const message = await db.message.create({
+          data: {
+            userId: session.user.id,
+            contactId: contact.id,
+            templateId: template_id || null,
+            content: messagePreview,
+            status: whatsappResult.success ? 'SENT' : 'FAILED'
+          }
+        })
+
+        // Create delivery log
+        await db.deliveryLog.create({
+          data: {
+            messageId: message.id,
+            contactId: contact.id,
+            status: whatsappResult.success ? 'DELIVERED' : 'FAILED',
+            responseDetail: whatsappResult.error || (whatsappResult.messageId ? `Message ID: ${whatsappResult.messageId}` : null)
+          }
+        })
+
+        results.push({
+          recipient,
+          status: whatsappResult.success ? 'DELIVERED' : 'FAILED',
+          messageId: whatsappResult.messageId,
+          error: whatsappResult.error
+        })
+
+      } catch (error) {
+        console.error(`❌ Error sending to ${recipient}:`, error)
+
+        // Create failed message record
+        const message = await db.message.create({
+          data: {
+            userId: session.user.id,
+            contactId: contact.id,
+            templateId: template_id || null,
+            content: messagePreview,
+            status: 'FAILED'
+          }
+        })
+
+        // Create delivery log with error
+        await db.deliveryLog.create({
+          data: {
+            messageId: message.id,
+            contactId: contact.id,
+            status: 'FAILED',
+            responseDetail: error instanceof Error ? error.message : 'Unknown error'
+          }
+        })
+
+        results.push({
+          recipient,
+          status: 'FAILED',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        })
+      }
     }
 
     return createSuccessResponse({
       recipients_final: dedupeResult.recipients_final,
       duplicates: dedupeResult.duplicates,
-      message_preview: messagePreview
+      message_preview: messagePreview,
+      results: {
+        total: results.length,
+        delivered: results.filter(r => r.status === 'DELIVERED').length,
+        failed: results.filter(r => r.status === 'FAILED').length,
+        details: results
+      }
     })
 
   } catch (error) {

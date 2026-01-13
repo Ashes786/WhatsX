@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { v4 as uuidv4 } from 'uuid'
 import { MessageScheduler } from '@/lib/scheduler'
+import WhatsAppAPI from '@/lib/whatsapp'
 
 export async function POST(request: NextRequest) {
   try {
@@ -123,6 +124,67 @@ export async function POST(request: NextRequest) {
         })
       )
     )
+
+    // Send messages immediately if not scheduled
+    if (!scheduledAt) {
+      console.log(`Sending message ${message.id} immediately to ${contacts.length} contacts`)
+
+      // Send to each contact
+      for (let i = 0; i < contacts.length; i++) {
+        const contact = contacts[i]
+        const deliveryLog = deliveryLogs[i]
+
+        try {
+          console.log(`Sending to contact ${contact.phoneNumber}: ${finalContent}`)
+
+          // Send via WAWP API (or WhatsApp Cloud API)
+          const result = await WhatsAppAPI.sendMessage(
+            contact.phoneNumber,
+            finalContent
+          )
+
+          console.log(`Result for ${contact.phoneNumber}:`, result)
+
+          // Update delivery log with actual result
+          await db.deliveryLog.update({
+            where: { id: deliveryLog.id },
+            data: {
+              status: result.success ? 'DELIVERED' : 'FAILED',
+              responseDetail: result.error || (result.messageId ? `Message ID: ${result.messageId}` : null)
+            }
+          })
+
+        } catch (error) {
+          console.error(`Failed to send to ${contact.phoneNumber}:`, error)
+
+          // Update delivery log with error
+          await db.deliveryLog.update({
+            where: { id: deliveryLog.id },
+            data: {
+              status: 'FAILED',
+              responseDetail: error instanceof Error ? error.message : 'Unknown error'
+            }
+          })
+        }
+      }
+
+      // Update message status based on results
+      const updatedDeliveryLogs = await db.deliveryLog.findMany({
+        where: { messageId: message.id }
+      })
+
+      const failedCount = updatedDeliveryLogs.filter(log => log.status === 'FAILED').length
+      const allDelivered = failedCount === 0
+
+      await db.message.update({
+        where: { id: message.id },
+        data: {
+          status: allDelivered ? 'SENT' : 'FAILED'
+        }
+      })
+
+      console.log(`Message ${message.id} sending complete. Delivered: ${updatedDeliveryLogs.length - failedCount}/${updatedDeliveryLogs.length}`)
+    }
 
     // Create schedule if needed
     if (scheduledAt) {

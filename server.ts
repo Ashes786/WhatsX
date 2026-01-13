@@ -1,6 +1,7 @@
 // server.ts - Next.js Standalone + Socket.IO
 import { config } from 'dotenv';
 import { setupSocket } from '@/lib/socket';
+import '@/lib/queue'; // Import queue to start the worker
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import next from 'next';

@@ -1,6 +1,6 @@
 import { Queue, Worker } from 'bullmq'
 import { db } from '@/lib/db'
-import WhatsAppCloudAPI from '@/lib/whatsapp'
+import WhatsAppAPI from '@/lib/whatsapp'
 
 // Create a message queue
 export const messageQueue = new Queue('message-queue', {
@@ -14,7 +14,7 @@ export const messageQueue = new Queue('message-queue', {
 class WhatsAppService {
   static async sendMessage(phoneNumber: string, message: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      const result = await WhatsAppCloudAPI.sendMessage(phoneNumber, message)
+      const result = await WhatsAppAPI.sendMessage(phoneNumber, message)
       return result
     } catch (error) {
       console.error('WhatsApp Service error:', error)
@@ -31,7 +31,7 @@ class WhatsAppService {
     parameters?: Array<{ type: string; text?: string }>
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      const result = await WhatsAppCloudAPI.sendTemplateMessage(phoneNumber, templateName, 'en', parameters)
+      const result = await WhatsAppAPI.sendTemplateMessage(phoneNumber, templateName, 'en', parameters)
       return result
     } catch (error) {
       console.error('WhatsApp Template Service error:', error)

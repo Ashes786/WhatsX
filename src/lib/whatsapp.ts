@@ -42,6 +42,14 @@ export interface WhatsAppResponse {
   }>
 }
 
+// WAWP API Response interfaces
+interface WAWPResponse {
+  success: boolean
+  message?: string
+  messageId?: string
+  error?: string
+}
+
 export class WhatsAppCloudAPI {
   private static readonly BASE_URL = 'https://graph.facebook.com/v18.0'
   private static readonly ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN
@@ -53,6 +61,11 @@ export class WhatsAppCloudAPI {
     message: string,
     type: 'text' | 'template' = 'text'
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    // Check if WAWP API is configured and use it if available
+    if (WAWPAPI.isConfigured()) {
+      return WAWPAPI.sendMessage(phoneNumber, message, type)
+    }
+
     try {
       if (!this.ACCESS_TOKEN || !this.PHONE_NUMBER_ID) {
         console.warn('WhatsApp Cloud API credentials not configured, using mock implementation')
@@ -108,6 +121,11 @@ export class WhatsAppCloudAPI {
     languageCode: string = 'en',
     parameters?: Array<{ type: string; text?: string }>
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    // Check if WAWP API is configured and use it if available
+    if (WAWPAPI.isConfigured()) {
+      return WAWPAPI.sendTemplateMessage(phoneNumber, templateName, languageCode, parameters)
+    }
+
     try {
       if (!this.ACCESS_TOKEN || !this.PHONE_NUMBER_ID) {
         console.warn('WhatsApp Cloud API credentials not configured, using mock implementation')
@@ -165,6 +183,11 @@ export class WhatsAppCloudAPI {
   }
 
   static async getMessageStatus(messageId: string): Promise<{ success: boolean; status?: string; error?: string }> {
+    // Check if WAWP API is configured and use it if available
+    if (WAWPAPI.isConfigured()) {
+      return WAWPAPI.getMessageStatus(messageId)
+    }
+
     try {
       if (!this.ACCESS_TOKEN) {
         return {
@@ -238,8 +261,258 @@ export class WhatsAppCloudAPI {
   }
 
   static isConfigured(): boolean {
-    return !!(this.ACCESS_TOKEN && this.PHONE_NUMBER_ID)
+    return !!(this.ACCESS_TOKEN && this.PHONE_NUMBER_ID) || WAWPAPI.isConfigured()
   }
 }
 
-export default WhatsAppCloudAPI
+/**
+ * WAWP API Implementation
+ * This class provides an alternative to WhatsApp Cloud API using WAWP's service
+ *
+ * Required Environment Variables:
+ * - WAWP_ACCESS_TOKEN: Your WAWP API access token
+ * - WAWP_INSTANCE_ID: Your WAWP instance ID
+ */
+export class WAWPAPI {
+  private static readonly BASE_URL = 'https://wawp.net/wp-json/awp/v1'
+  private static readonly ACCESS_TOKEN = process.env.WAWP_ACCESS_TOKEN
+  private static readonly INSTANCE_ID = process.env.WAWP_INSTANCE_ID
+
+  static async sendMessage(
+    phoneNumber: string,
+    message: string,
+    type: 'text' | 'template' = 'text'
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      if (!this.isConfigured()) {
+        throw new Error('WAWP API credentials not configured')
+      }
+
+      // WAWP API uses query parameters
+      const url = `${this.BASE_URL}/send?instance_id=${this.INSTANCE_ID}&access_token=${this.ACCESS_TOKEN}&chatId=${phoneNumber}&message=${encodeURIComponent(message)}`
+
+      const response = await axios.post(url, {}, {
+        timeout: 30000 // 30 second timeout
+      })
+
+      // Check for successful response
+      if (response.data && response.data._data && response.data._data.id) {
+        return {
+          success: true,
+          messageId: response.data._data.id?.id || `wawp_${Date.now()}`
+        }
+      }
+
+      // Check for error in response
+      if (response.data && response.data.wawp_upstream_error) {
+        return {
+          success: false,
+          error: response.data.wawp_upstream_error
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Failed to send message via WAWP API'
+      }
+
+    } catch (error: any) {
+      console.error('WAWP API error:', error.response?.data || error.message)
+      const errorMsg = error.response?.data?.wawp_upstream_error ||
+                      error.response?.data?.message ||
+                      error.response?.data?.error ||
+                      error.message ||
+                      'Unknown WAWP API error'
+      return {
+        success: false,
+        error: errorMsg
+      }
+    }
+  }
+
+  static async sendTemplateMessage(
+    phoneNumber: string,
+    templateName: string,
+    languageCode: string = 'en',
+    parameters?: Array<{ type: string; text?: string }>
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      if (!this.isConfigured()) {
+        throw new Error('WAWP API credentials not configured')
+      }
+
+      // For WAWP, template messages are sent as regular text with variables
+      // You can use parameters to customize the message
+      let message = templateName
+
+      // Replace template variables if parameters are provided
+      if (parameters && parameters.length > 0) {
+        const params = parameters.filter(p => p.text).map(p => p.text).join(', ')
+        message = `${templateName}\nParams: ${params}`
+      }
+
+      // WAWP API uses query parameters
+      const url = `${this.BASE_URL}/send?instance_id=${this.INSTANCE_ID}&access_token=${this.ACCESS_TOKEN}&chatId=${phoneNumber}&message=${encodeURIComponent(message)}`
+
+      const response = await axios.post(url, {}, {
+        timeout: 30000
+      })
+
+      // Check for successful response
+      if (response.data && response.data._data && response.data._data.id) {
+        return {
+          success: true,
+          messageId: response.data._data.id?.id || `wawp_${Date.now()}`
+        }
+      }
+
+      // Check for error in response
+      if (response.data && response.data.wawp_upstream_error) {
+        return {
+          success: false,
+          error: response.data.wawp_upstream_error
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Failed to send template message via WAWP API'
+      }
+
+    } catch (error: any) {
+      console.error('WAWP API template error:', error.response?.data || error.message)
+      const errorMsg = error.response?.data?.wawp_upstream_error ||
+                      error.response?.data?.message ||
+                      error.response?.data?.error ||
+                      error.message ||
+                      'Unknown WAWP API error'
+      return {
+        success: false,
+        error: errorMsg
+      }
+    }
+  }
+
+  static async getMessageStatus(messageId: string): Promise<{ success: boolean; status?: string; error?: string }> {
+    try {
+      if (!this.isConfigured()) {
+        return {
+          success: false,
+          error: 'WAWP API credentials not configured'
+        }
+      }
+
+      // WAWP doesn't have a direct message status endpoint
+      // We'll return success since the message was sent
+      return {
+        success: true,
+        status: 'sent'
+      }
+
+    } catch (error: any) {
+      console.error('WAWP API status check error:', error.response?.data || error.message)
+      return {
+        success: false,
+        error: error.response?.data?.message || error.response?.data?.error || error.message || 'Unknown WAWP API error'
+      }
+    }
+  }
+
+  static async checkConnection(): Promise<{ success: boolean; connected?: boolean; error?: string }> {
+    try {
+      if (!this.isConfigured()) {
+        return {
+          success: false,
+          error: 'WAWP API credentials not configured'
+        }
+      }
+
+      // Use session info endpoint to check connection
+      const url = `${this.BASE_URL}/session/info?instance_id=${this.INSTANCE_ID}&access_token=${this.ACCESS_TOKEN}`
+
+      const response = await axios.get(url, {
+        timeout: 30000
+      })
+
+      // Check if session is working
+      if (response.data && response.data.status === 'WORKING') {
+        return {
+          success: true,
+          connected: true
+        }
+      }
+
+      return {
+        success: true,
+        connected: false
+      }
+
+    } catch (error: any) {
+      console.error('WAWP API connection check error:', error.response?.data || error.message)
+      return {
+        success: false,
+        error: error.response?.data?.message || error.response?.data?.error || error.message || 'Unknown WAWP API error'
+      }
+    }
+  }
+
+  static isConfigured(): boolean {
+    return !!(this.ACCESS_TOKEN && this.INSTANCE_ID)
+  }
+
+  static getProviderInfo(): { provider: string; configured: boolean; instanceId?: string } {
+    return {
+      provider: 'WAWP API',
+      configured: this.isConfigured(),
+      instanceId: this.INSTANCE_ID || undefined
+    }
+  }
+}
+
+// Export a unified interface that automatically selects the best available API
+export class WhatsAppAPI {
+  static async sendMessage(
+    phoneNumber: string,
+    message: string,
+    type: 'text' | 'template' = 'text'
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    return WhatsAppCloudAPI.sendMessage(phoneNumber, message, type)
+  }
+
+  static async sendTemplateMessage(
+    phoneNumber: string,
+    templateName: string,
+    languageCode: string = 'en',
+    parameters?: Array<{ type: string; text?: string }>
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    return WhatsAppCloudAPI.sendTemplateMessage(phoneNumber, templateName, languageCode, parameters)
+  }
+
+  static async getMessageStatus(messageId: string): Promise<{ success: boolean; status?: string; error?: string }> {
+    return WhatsAppCloudAPI.getMessageStatus(messageId)
+  }
+
+  static isConfigured(): boolean {
+    return WhatsAppCloudAPI.isConfigured()
+  }
+
+  static getProviderInfo(): { provider: string; configured: boolean } {
+    if (WAWPAPI.isConfigured()) {
+      return WAWPAPI.getProviderInfo()
+    }
+    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
+    if (accessToken && phoneNumberId) {
+      return {
+        provider: 'WhatsApp Cloud API',
+        configured: true
+      }
+    }
+    return {
+      provider: 'None (Mock Mode)',
+      configured: false
+    }
+  }
+}
+
+export default WhatsAppAPI
